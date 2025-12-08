@@ -124,8 +124,8 @@ const TerminalChat: React.FC<TerminalChatProps> = ({ isOpen, onClose }) => {
         '[CONTACT]',
         'LinkedIn: https://www.linkedin.com/in/althaf-shajahan-angry/',
         'Mail: angry.althaf@gmail.com',
-        'SW5zdGFncmFtOiBodHRwczovL3d3dy5pbnN0YWdyYW0uY29tL2lnLmFuZ19yeS8=',
-        'For professional inquiries, reach out via LinkedIn/Mail.'
+        'SW5zdGFncmFtOiBodHRwczovL3d3dy5pbnN0YWdyYW0uY29tL2lnLmFuZ19yeS8='',
+        'For professional inquiries, reach out via LinkedIn.'
       ].join('\n');
     }
     
