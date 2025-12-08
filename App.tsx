@@ -31,7 +31,7 @@ const App: React.FC = () => {
               <div className="animate-fade-in-up delay-100">
                 <div className="inline-flex items-center px-3 py-1 mb-6 bg-accent/10 border border-accent/20 text-accent text-xs font-bold uppercase tracking-wider w-max rounded backdrop-blur-sm">
                   <Activity size={12} className="mr-2 animate-pulse" />
-                  Security Researcher
+                  Offensive Security Researcher
                 </div>
               </div>
               
@@ -48,9 +48,9 @@ const App: React.FC = () => {
               </div>
               
               <p className="text-gray-400 text-sm md:text-base max-w-lg mb-10 leading-relaxed animate-fade-in-up delay-500 border-l-2 border-accent/30 pl-6">
-                I break things to make them stronger. Specialized in Offensive Security, 
-                Bug Bounty Hunting, Red Team operations, CTF & AI.
-                Hack - Code - Secure.
+                I break things to make them stronger. Specialized in Offensive Security,
+                red team operations, and advanced persistent threat simulation.
+                I find the vulnerabilities before the bad guys do.
               </p>
 
               <div className="animate-fade-in-up delay-700">
@@ -96,17 +96,12 @@ const App: React.FC = () => {
               {/* Main Character Image */}
               <div className="relative z-0 w-64 h-64 md:w-96 md:h-96 rounded-full overflow-hidden border-2 border-gray-800 bg-[#0a0a0a] group shadow-[0_0_50px_rgba(0,0,0,0.5)] hover:shadow-[0_0_50px_rgba(74,222,128,0.2)] transition-all duration-500">
                      <img 
-                      src={`${import.meta.env.BASE_URL}mypic-anime.png`} 
+                      src="{`${import.meta.env.BASE_URL}mypic-anime.png`}" 
                       alt="Althaf Shajahan" 
                       className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
                     />
                      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80"></div>
               </div>
-
-              {/* Floating Icons */}
-            </div>
-          </div>
-
         </main>
         
          {/* FOOTER */}
