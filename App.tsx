@@ -56,7 +56,7 @@ const App: React.FC = () => {
               <div className="animate-fade-in-up delay-700">
                 <button 
                   onClick={() => setIsChatOpen(true)}
-                  className="group relative overflow-hidden flex items-center space-x-3 text-black text-sm font-bold tracking-widest uppercase bg-accent px-8 py-4 hover:bg-white transition-all w-max shadow-[0_0_20px_rgba(74,222,128,0.3)] hover:shadow-[0_0_30px_rgba(74,222,128,0.6)]"
+                  className="group relative overflow-hidden flex items-center space-x-3 text-black text-sm font-bold tracking-widest uppercase bg-accent px-8 py-4 hover:bg-white transition-all w-max rounded"
                 >
                   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></div>
                   <Terminal size={18} className="group-hover:rotate-12 transition-transform duration-300" />
@@ -74,17 +74,17 @@ const App: React.FC = () => {
               
               {/* Complex Cyber-HUD Animation Background */}
               {/* Layer 1: Outer faint perimeter - Slow Rotate */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[650px] md:h-[650px] border border-dashed border-gray-800/40 rounded-full animate-[spin_60s_linear_infinite]"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[650px] md:h-[650px] border border-dashed border-gray-800/40 rounded-full animate-spin-slow"></div>
               
               {/* Layer 2: Middle structural ring - Reverse Rotate Medium */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] md:w-[550px] md:h-[550px] rounded-full border border-gray-800/30 animate-[spin_30s_linear_infinite_reverse] flex items-center justify-center">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] md:w-[550px] md:h-[550px] rounded-full border border-gray-800/30 animate-[spin_30s_linear_infinite]">
                  {/* Decorative elements on the ring */}
                  <div className="absolute w-[102%] h-1 bg-gray-900/0 border-l border-r border-accent/20"></div>
                  <div className="absolute h-[102%] w-1 bg-gray-900/0 border-t border-b border-accent/20"></div>
               </div>
 
               {/* Layer 3: Inner active scanner - Fast Rotate */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[480px] md:h-[480px] rounded-full border-t border-l border-accent/30 border-b border-r border-transparent animate-[spin_8s_linear_infinite]"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[480px] md:h-[480px] rounded-full border-t border-l border-accent/30 border-b border-accent/20 animate-spin-fast"></div>
               
               {/* Layer 4: Pulsing Aura */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[260px] h-[260px] md:w-[400px] md:h-[400px] bg-accent/5 rounded-full blur-3xl animate-pulse-slow"></div>
@@ -94,19 +94,16 @@ const App: React.FC = () => {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-full bg-gradient-to-b from-transparent via-gray-800/50 to-transparent"></div>
               
               {/* Main Character Image */}
-              <div className="relative z-0 w-64 h-64 md:w-96 md:h-96 rounded-full overflow-hidden border-2 border-gray-800 bg-[#0a0a0a] group shadow-[0_0_50px_rgba(0,0,0,0.5)] hover:shadow-[0_0_50px_rgba(74,222,128,0.2)] transition-all duration-500">
-                     <img 
-                      src={`${import.meta.env.BASE_URL}mypic-anime.png`} 
-                      alt="Althaf Shajahan" 
-                      className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
-                    />
-                     <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80"></div>
+              <div className="relative z-0 w-64 h-64 md:w-96 md:h-96 rounded-full overflow-hidden border-2 border-gray-800 bg-[#0a0a0a] group shadow-[0_0_50px_rgba(0,0,0,0.5)] hover:shadow-[0_0_50px_rgba(0,0,0,0.7)] transition-shadow duration-300">
+                <img 
+                  src={`${import.meta.env.BASE_URL}mypic-anime.png`} 
+                  alt="Althaf Shajahan" 
+                  className="w-full h-full object-cover grayscale opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80"></div>
               </div>
-
-              {/* Floating Icons */}
             </div>
-          </div>
-
+          </div> {/* end grid */}
         </main>
         
          {/* FOOTER */}
