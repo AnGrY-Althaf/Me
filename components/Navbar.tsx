@@ -15,11 +15,11 @@ const Navbar: React.FC = () => {
             <Linkedin size={18} />
             <span className="hidden lg:inline text-xs">LinkedIn</span>
         </a>
-        <a href="https://github.com/AnGrY-Althaf" className="flex items-center space-x-2 hover:text-white transition-colors">
+        <a href="#" className="flex items-center space-x-2 hover:text-white transition-colors">
             <Github size={18} />
             <span className="hidden lg:inline text-xs">Github</span>
         </a>
-        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=angry.althaf@gmail.com" className="hover:text-white transition-colors">
+        <a href="#" className="hover:text-white transition-colors">
             <Mail size={18} />
         </a>
       </div>
