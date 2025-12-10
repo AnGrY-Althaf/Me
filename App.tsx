@@ -32,7 +32,7 @@ const App: React.FC = () => {
               <div className="animate-fade-in-up delay-100">
                 <div className="inline-flex items-center px-3 py-1 mb-6 bg-accent/10 border border-accent/20 text-accent text-xs font-bold uppercase tracking-wider w-max rounded backdrop-blur-sm">
                   <Activity size={12} className="mr-2 animate-pulse" />
-                  Offensive Security Researcher
+                  Security Researcher
                 </div>
               </div>
 
@@ -49,9 +49,9 @@ const App: React.FC = () => {
               </div>
 
               <p className="text-gray-400 text-sm md:text-base max-w-lg mb-10 leading-relaxed animate-fade-in-up delay-500 border-l-2 border-accent/30 pl-6">
-                I break things to make them stronger. Specialized in Offensive Security,
-                red team operations, and advanced persistent threat simulation.
-                I find the vulnerabilities before the bad guys do.
+                I break things to make them stronger. Specialized in Offensive Security, 
+                Bug Bounty Hunting, Red Team operations, CTF & AI.
+                Hack - Code - Secure.
               </p>
 
               <div className="animate-fade-in-up delay-700">
