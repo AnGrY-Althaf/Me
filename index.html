@@ -2310,9 +2310,9 @@
         const q = msg.toLowerCase();
         if (q === 'clear') { setMessages([]); return 'cleared.'; }
         if (q.includes('help')) return 'Commands:\n  whoami · creds · experience · skills\n  achievements · services · contact · clear';
-        if (q.includes('whoami') || q.includes('who')) return '[IDENTITY]\nName: Althaf Shajahan (aka AnGrY)\nRole: Security Researcher / Bug Bounty Hunter / Red Teamer\nExp: 6+ Years\nSpecialized in Offensive Security, Bug Bounty, CTF, Red Team, AI.';
+        if (q.includes('whoami') || q.includes('who')) return '[IDENTITY]\nName: Althaf Shajahan (aka AnGrY)\nRole: Security Engineer / Security Researcher / Bug Bounty Hunter\nExp: 6+ Years\nSpecialized in Product Security, VAPT, Security Architecture, Offensive Security, Bug Bounty, Red Team, AI.';
         if (q.includes('cred') || q.includes('cert')) return '[CREDENTIALS]\n• CRTA — Certified Red Team Analyst\n• CEH  — Certified Ethical Hacker\n• CAP  — Certified AppSec Practitioner\n• CNSP — Certified Network Security Practitioner\n• HTB ProLabs: Dante · RastaLabs · Poo';
-        if (q.includes('exp') || q.includes('work')) return '[EXPERIENCE]\n1. Sr. Security Researcher @ Offenso Hacker Academy  [2025–Present]\n2. Security Researcher @ RedTeam Hacker Academy      [2023–2024]\n3. Bug Bounty Hunter @ HackerOne / YesWeHack / BC    [2021–Present]';
+        if (q.includes('exp') || q.includes('work')) return '[EXPERIENCE]\n1. Security Engineer @ Veuz Concepts                     [2026–Present]\n2. Sr. Security Researcher @ Offenso Hacker Academy  [2025–2026]\n3. Security Researcher @ RedTeam Hacker Academy      [2023–2024]\n4. Bug Bounty Hunter @ HackerOne / YesWeHack / BC    [2021–Present]';
         if (q.includes('skill')) return '[CAPABILITIES]\n• Bug Bounty Hunting\n• CTF / Pen Testing\n• AI / MCP Integration\n• Web / API / Android Security\n• Malware Analysis\n• Python · Bash · JS · Go · C / C++';
         if (q.includes('achieve') || q.includes('fame') || q.includes('hall')) return '[HALL OF FAME]\n• NASA\n• MasterCard\n• Sony\n• Dela\n• HackTheBox — Pro Hacker\n• TryHackMe  — Top 1%';
         if (q.includes('service') || q.includes('offer')) return '[SERVICES]\n• Penetration Testing\n• AI Integrations (MCP)\n• Security Consultation\n• Security Automation\n• Cyber Security Training\n• Red Teaming (Adversarial Simulation)';
@@ -2583,7 +2583,8 @@
       }, []);
 
       const exp = [
-        { period: '2025 — PRESENT', role: 'Senior Security Researcher', company: 'Offenso Hacker Academy', desc: 'Leading offensive security research, vulnerability assessment, and adversarial simulation engagements.' },
+        { period: '2026 — PRESENT', role: 'Security Engineer', company: 'Veuz Concepts', desc: 'Focusing on product security, vulnerability assessment & penetration testing (VAPT), and security architecture design & implementation.' },
+        { period: '2025 — 2026', role: 'Senior Security Researcher', company: 'Offenso Hacker Academy', desc: 'Led offensive security research, vulnerability assessment, and adversarial simulation engagements.' },
         { period: '2023 — 2024', role: 'Security Researcher', company: 'RedTeam Hacker Academy', desc: 'Conducted red team operations, developed custom exploit frameworks, and trained the next generation of security professionals.' },
         { period: '2021 — PRESENT', role: 'Bug Bounty Hunter', company: 'HackerOne · YesWeHack · BugCrowd', desc: 'Active independent security researcher with Hall of Fame entries at NASA, MasterCard, Sony, and Dela.' }];
 
