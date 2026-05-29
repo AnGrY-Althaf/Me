@@ -2105,6 +2105,562 @@
         gap: 8px;
       }
     }
+
+    /* ─── SCROLL PROGRESS BAR ─── */
+    #scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green), var(--cyan), var(--green));
+      background-size: 200% 100%;
+      box-shadow: 0 0 12px var(--green-glow), 0 0 28px rgba(74, 222, 128, 0.18);
+      z-index: 9999;
+      width: 0%;
+      pointer-events: none;
+      transition: width 0.08s linear;
+      animation: progress-shimmer 3s linear infinite;
+    }
+
+    @keyframes progress-shimmer {
+      0% {
+        background-position: 0% 0%;
+      }
+
+      100% {
+        background-position: 200% 0%;
+      }
+    }
+
+    /* ─── CUSTOM CURSOR ─── */
+    @media (pointer: fine) {
+      * {
+        cursor: none !important;
+      }
+    }
+
+    .cursor-outer {
+      position: fixed;
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(74, 222, 128, 0.55);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      will-change: left, top;
+      transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease, transform 0.2s ease;
+    }
+
+    .cursor-outer::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -10px;
+      width: 10px;
+      height: 1px;
+      background: rgba(74, 222, 128, 0.55);
+      transform: translateY(-50%);
+    }
+
+    .cursor-outer::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      width: 1px;
+      height: 10px;
+      background: rgba(74, 222, 128, 0.55);
+      transform: translateX(-50%);
+    }
+
+    .cursor-inner {
+      position: fixed;
+      width: 5px;
+      height: 5px;
+      background: var(--green);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px var(--green-glow);
+      will-change: left, top;
+    }
+
+    .cursor-outer.hovered {
+      width: 52px;
+      height: 52px;
+      border-color: var(--cyan);
+      border-radius: 4px;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .cursor-outer.clicking {
+      transform: translate(-50%, -50%) scale(0.72);
+    }
+
+    /* ─── SPOTLIGHT ─── */
+    #spotlight {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── STATS TICKER ─── */
+    .stats-ticker {
+      position: relative;
+      overflow: hidden;
+      padding: 22px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .stats-ticker::before,
+    .stats-ticker::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 140px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .stats-ticker::before {
+      left: 0;
+      background: linear-gradient(90deg, var(--surface), transparent);
+    }
+
+    .stats-ticker::after {
+      right: 0;
+      background: linear-gradient(-90deg, var(--surface), transparent);
+    }
+
+    .stats-ticker-track {
+      display: flex;
+      width: max-content;
+      animation: ticker-scroll 34s linear infinite;
+    }
+
+    .stats-ticker-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes ticker-scroll {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .stats-ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 52px;
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .stats-ticker-num {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green);
+      text-shadow: 0 0 18px var(--green-glow);
+      min-width: 56px;
+    }
+
+    .stats-ticker-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      line-height: 1.7;
+    }
+
+    /* ─── ENHANCED SECTION-FADE ─── */
+    .section-fade {
+      opacity: 0;
+      transform: translateY(38px);
+      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .section-fade.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── SKILL CARD ENHANCED ─── */
+    .skill-card {
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .skill-card:hover {
+      transform: translateY(-6px) !important;
+      box-shadow: 0 14px 44px rgba(74, 222, 128, 0.13), inset 0 1px 0 rgba(74, 222, 128, 0.12) !important;
+    }
+
+    .skill-card:hover .skill-bar-fill {
+      box-shadow: 0 0 22px var(--green-glow) !important;
+    }
+
+    /* ─── CERT BADGE SHIMMER ─── */
+    .cert-badge {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cert-badge::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.22), transparent);
+    }
+
+    .cert-badge:hover::after {
+      left: 200%;
+      transition: left 0.55s ease;
+    }
+
+    /* ─── ACHIEVEMENT CARD ─── */
+    .achieve-card {
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .achieve-card:hover {
+      transform: translateY(-8px) scale(1.015) !important;
+      box-shadow: 0 22px 64px rgba(74, 222, 128, 0.12) !important;
+    }
+
+    .achieve-glow {
+      transition: all 0.4s ease;
+    }
+
+    .achieve-card:hover .achieve-glow {
+      opacity: 0.32 !important;
+      filter: blur(10px) !important;
+      transform: scale(2.8);
+    }
+
+    /* ─── SERVICE CARD ENHANCED ─── */
+    .service-card {
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .service-card:hover {
+      transform: translateY(-8px) !important;
+      box-shadow: 0 22px 64px rgba(74, 222, 128, 0.13) !important;
+    }
+
+    .service-corner {
+      transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease !important;
+    }
+
+    .service-card:hover .service-corner {
+      width: 64px !important;
+      height: 64px !important;
+      border-color: rgba(74, 222, 128, 0.45) !important;
+    }
+
+    /* ─── TIMELINE LINE DRAW ─── */
+    .timeline::before {
+      transform-origin: top;
+      transform: scaleY(0) !important;
+      transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .timeline.line-drawn::before {
+      transform: scaleY(1) !important;
+    }
+
+    .timeline-item {
+      transition: transform 0.3s ease;
+    }
+
+    .timeline-item:hover {
+      transform: translateX(10px);
+    }
+
+    .timeline-item::before {
+      transition: box-shadow 0.3s ease, width 0.3s ease, height 0.3s ease, left 0.3s ease !important;
+    }
+
+    .timeline-item:hover::before {
+      box-shadow: 0 0 0 5px rgba(74, 222, 128, 0.14), 0 0 28px var(--green-glow) !important;
+      width: 13px !important;
+      height: 13px !important;
+      left: -46.5px !important;
+    }
+
+    /* ─── CONTACT LINK ─── */
+    .contact-link {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .contact-link:hover {
+      transform: translateX(7px) !important;
+    }
+
+    /* ─── HUD RINGS ─── */
+    .hud-ring {
+      will-change: margin-left, margin-top;
+      transition: margin 0.08s linear;
+    }
+
+    /* ─── HERO SCROLL INDICATOR ─── */
+    .hero-scroll-indicator {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      animation: hero-bounce 2.4s ease-in-out infinite;
+      opacity: 0.55;
+    }
+
+    .hero-scroll-indicator span {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    .hero-scroll-line {
+      width: 1px;
+      height: 48px;
+      background: linear-gradient(to bottom, var(--green), transparent);
+    }
+
+    @keyframes hero-bounce {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0px);
+        opacity: 0.55;
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(12px);
+        opacity: 0.25;
+      }
+    }
+
+    @media (max-width: 900px) {
+
+      .cursor-outer,
+      .cursor-inner {
+        display: none !important;
+      }
+
+      .stats-ticker-num {
+        font-size: 18px;
+      }
+
+      .stats-ticker-item {
+        padding: 0 28px;
+      }
+
+      .hero-scroll-indicator {
+        display: none;
+      }
+    }
+
+    /* ─── SCROLLSPY ACTIVE NAV ─── */
+    .nav-links a {
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--green);
+      transition: width 0.3s ease;
+      box-shadow: 0 0 6px var(--green-glow);
+    }
+
+    .nav-links a.active {
+      color: var(--green);
+    }
+
+    .nav-links a.active::after {
+      width: 100%;
+    }
+
+    /* ─── SECTION GHOST NUMBER ─── */
+    .section-ghost-num {
+      position: absolute;
+      top: -20px;
+      right: 0;
+      font-family: var(--font-display);
+      font-size: clamp(100px, 16vw, 180px);
+      font-weight: 700;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(74, 222, 128, 0.05);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1.2s ease 0.2s, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+    }
+
+    .section-ghost-num.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Sections that contain ghost nums need relative positioning */
+    .skills-section,
+    .exp-section,
+    .achieve-inner,
+    .services-section,
+    .contact-section {
+      position: relative;
+    }
+
+    /* ─── DIRECTION-AWARE ANIMATIONS ─── */
+    .anim-left {
+      opacity: 0;
+      transform: translateX(-50px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .anim-left.in-view {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .anim-right {
+      opacity: 0;
+      transform: translateX(50px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .anim-right.in-view {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .anim-scale {
+      opacity: 0;
+      transform: scale(0.82) translateY(20px);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .anim-scale.in-view {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    .anim-flip {
+      opacity: 0;
+      transform: perspective(600px) rotateY(25deg) translateX(20px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .anim-flip.in-view {
+      opacity: 1;
+      transform: perspective(600px) rotateY(0deg) translateX(0);
+    }
+
+    /* ─── SCRAMBLE TEXT ─── */
+    .scramble-title {
+      display: inline-block;
+    }
+
+    /* ─── MAGNETIC BUTTON ─── */
+    .btn-primary {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      will-change: transform;
+    }
+
+    /* ─── FOOTER GLOW ─── */
+    .footer {
+      position: relative;
+    }
+
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--green), var(--cyan), var(--green), transparent);
+      opacity: 0.3;
+    }
+
+    /* ─── CONTACT BIG TEXT ANIMATION ─── */
+    .contact-big-text {
+      will-change: transform;
+    }
+
+    /* ─── ACHIEVEMENT CARD STAGGER DIRECTION ─── */
+    .achieve-card.anim-scale {
+      transform-origin: center bottom;
+    }
+
+    /* ─── SERVICE CARD GRID ─── */
+    .service-card.anim-left {
+      transform-origin: left center;
+    }
+
+    .service-card.anim-right {
+      transform-origin: right center;
+    }
+
+    /* ─── SKILL CARD ALTERNATING DIRECTION ─── */
+    .skill-card.anim-left,
+    .skill-card.anim-right {
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .skill-card.anim-left:hover,
+    .skill-card.anim-right:hover {
+      transform: translateY(-6px) !important;
+    }
+
+    /* ─── SECTION HEADER ENHANCED ─── */
+    .section-tag {
+      overflow: hidden;
+    }
+
+    .section-tag-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100%);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .section-header.in-view .section-tag-inner {
+      transform: translateY(0);
+    }
   </style>
 </head>
 
@@ -2114,6 +2670,14 @@
   <canvas id="matrix-canvas"></canvas>
   <!-- Noise overlay -->
   <div class="noise"></div>
+
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress"></div>
+  <!-- Custom Cursor -->
+  <div class="cursor-outer" id="cursor-outer"></div>
+  <div class="cursor-inner" id="cursor-inner"></div>
+  <!-- Mouse Spotlight -->
+  <div id="spotlight"></div>
 
   <!-- Boot Screen -->
   <div id="boot-screen">
@@ -2272,6 +2836,200 @@
     })();
   </script>
 
+  <script>
+    // ─── SCROLL PROGRESS ───
+    (function () {
+      var bar = document.getElementById('scroll-progress');
+      if (!bar) return;
+      function update() {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        bar.style.width = (max > 0 ? Math.min(window.scrollY / max * 100, 100) : 0) + '%';
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      update();
+    })();
+
+    // ─── CUSTOM CURSOR ───
+    (function () {
+      if (window.matchMedia('(pointer: coarse)').matches) return;
+      var outer = document.getElementById('cursor-outer');
+      var inner = document.getElementById('cursor-inner');
+      if (!outer || !inner) return;
+      var mx = window.innerWidth / 2, my = window.innerHeight / 2;
+      var ox = mx, oy = my;
+      document.addEventListener('mousemove', function (e) {
+        mx = e.clientX; my = e.clientY;
+        inner.style.left = mx + 'px';
+        inner.style.top = my + 'px';
+      }, { passive: true });
+      (function loop() {
+        ox += (mx - ox) * 0.13;
+        oy += (my - oy) * 0.13;
+        outer.style.left = Math.round(ox * 10) / 10 + 'px';
+        outer.style.top = Math.round(oy * 10) / 10 + 'px';
+        requestAnimationFrame(loop);
+      })();
+      document.addEventListener('mousedown', function () { outer.classList.add('clicking'); });
+      document.addEventListener('mouseup', function () { outer.classList.remove('clicking'); });
+      // Attach hover listeners after React renders
+      setTimeout(function () {
+        document.querySelectorAll('a, button, .skill-card, .achieve-card, .service-card, .cert-badge, .contact-link').forEach(function (el) {
+          el.addEventListener('mouseenter', function () { outer.classList.add('hovered'); });
+          el.addEventListener('mouseleave', function () { outer.classList.remove('hovered'); });
+        });
+      }, 2400);
+    })();
+
+    // ─── MOUSE SPOTLIGHT ───
+    (function () {
+      if (window.matchMedia('(pointer: coarse)').matches) return;
+      var sp = document.getElementById('spotlight');
+      if (!sp) return;
+      document.addEventListener('mousemove', function (e) {
+        sp.style.background = 'radial-gradient(700px circle at ' + e.clientX + 'px ' + e.clientY + 'px, rgba(74,222,128,0.04) 0%, transparent 70%)';
+      }, { passive: true });
+    })();
+
+    // ─── HERO PARALLAX ───
+    (function () {
+      if (window.matchMedia('(pointer: coarse)').matches) return;
+      var ticking = false;
+      document.addEventListener('mousemove', function (e) {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+          var rings = document.querySelectorAll('.hud-ring');
+          if (rings.length === 0) { ticking = false; return; }
+          var cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+          var dx = (e.clientX - cx) / cx;
+          var dy = (e.clientY - cy) / cy;
+          rings.forEach(function (ring, i) {
+            var s = (i + 1) * 7;
+            var d = i % 2 === 0 ? 1 : -1;
+            ring.style.marginLeft = (dx * s * d).toFixed(2) + 'px';
+            ring.style.marginTop = (dy * s * d).toFixed(2) + 'px';
+          });
+          ticking = false;
+        });
+      }, { passive: true });
+      window.addEventListener('scroll', function () {
+        var vid = document.querySelector('.hero-scene video');
+        if (!vid) return;
+        var pct = Math.min(window.scrollY / window.innerHeight, 1);
+        vid.style.transform = 'translateY(' + (pct * 22).toFixed(2) + '%) scale(1.08)';
+      }, { passive: true });
+    })();
+  </script>
+
+  <script>
+    // ─── TEXT SCRAMBLE ENGINE ───
+    (function () {
+      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*<>/|\\{}[]';
+      function scramble(el, finalText, duration) {
+        var start = null;
+        var originalText = finalText;
+        function step(ts) {
+          if (!start) start = ts;
+          var prog = Math.min((ts - start) / duration, 1);
+          var revealed = Math.floor(prog * originalText.length);
+          var out = '';
+          for (var i = 0; i < originalText.length; i++) {
+            if (originalText[i] === ' ') { out += ' '; continue; }
+            if (i < revealed) {
+              out += originalText[i];
+            } else {
+              out += chars[Math.floor(Math.random() * chars.length)];
+            }
+          }
+          el.textContent = out;
+          if (prog < 1) requestAnimationFrame(step);
+          else el.textContent = originalText;
+        }
+        requestAnimationFrame(step);
+      }
+
+      // Observe all scramble targets after React renders
+      setTimeout(function () {
+        var obs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !entry.target.dataset.scrambled) {
+              entry.target.dataset.scrambled = '1';
+              var text = entry.target.dataset.scramble || entry.target.textContent;
+              entry.target.dataset.scramble = entry.target.dataset.scramble || text;
+              scramble(entry.target, text, 900);
+            }
+          });
+        }, { threshold: 0.3 });
+        document.querySelectorAll('.section-title').forEach(function (el) {
+          obs.observe(el);
+        });
+      }, 2200);
+    })();
+
+    // ─── SCROLLSPY (active nav highlight) ───
+    (function () {
+      setTimeout(function () {
+        var sections = ['skills', 'experience', 'achievements', 'services', 'contact'];
+        var links = {};
+        sections.forEach(function (id) {
+          var a = document.querySelector('.nav-links a[data-section="' + id + '"]');
+          if (a) links[id] = a;
+        });
+
+        var obs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            var id = entry.target.id;
+            var link = links[id];
+            if (!link) return;
+            if (entry.isIntersecting) {
+              Object.values(links).forEach(function (l) { l.classList.remove('active'); });
+              link.classList.add('active');
+            }
+          });
+        }, { threshold: 0.35 });
+
+        sections.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) obs.observe(el);
+        });
+      }, 2200);
+    })();
+
+    // ─── MAGNETIC BUTTON ───
+    (function () {
+      if (window.matchMedia('(pointer: coarse)').matches) return;
+      setTimeout(function () {
+        var btn = document.querySelector('.btn-primary');
+        if (!btn) return;
+        btn.addEventListener('mousemove', function (e) {
+          var rect = btn.getBoundingClientRect();
+          var cx = rect.left + rect.width / 2;
+          var cy = rect.top + rect.height / 2;
+          var dx = (e.clientX - cx) * 0.28;
+          var dy = (e.clientY - cy) * 0.28;
+          btn.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+        });
+        btn.addEventListener('mouseleave', function () {
+          btn.style.transform = 'translate(0, 0)';
+        });
+      }, 2200);
+    })();
+
+    // ─── SECTION GHOST NUMBERS ───
+    (function () {
+      setTimeout(function () {
+        var obs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) e.target.classList.add('visible');
+          });
+        }, { threshold: 0.05 });
+        document.querySelectorAll('.section-ghost-num').forEach(function (el) {
+          obs.observe(el);
+        });
+      }, 2200);
+    })();
+  </script>
+
   <script type="text/babel">
 
 
@@ -2292,7 +3050,8 @@
         code: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
         brain: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.73A3 3 0 015 11a3 3 0 011.61-2.65A2.5 2.5 0 019.5 2z" /><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.73A3 3 0 0019 11a3 3 0 00-1.61-2.65A2.5 2.5 0 0014.5 2z" /></svg>,
         target: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
-        activity: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+        activity: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
+        medium: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z" /></svg>
       };
       return icons[name] || null;
     };
@@ -2401,19 +3160,20 @@
       };
 
       return (
-        <nav className="nav" style={scrolled ? { borderBottomColor: 'rgba(74,222,128,0.08)' } : {}}>
+        <nav className="nav" style={scrolled ? { borderBottomColor: 'rgba(74,222,128,0.08)', boxShadow: '0 1px 40px rgba(74,222,128,0.06)' } : {}}>
           <div className="nav-logo">
             Althaf <span>/ AnGrY</span>
           </div>
           <div className="nav-links">
-            {[['skills', 'Skills'], ['experience', 'Experience'], ['achievements', 'Achievements'], ['contact', 'Contact']].map(([id, label]) =>
-              <a key={id} href="#" onClick={(e) => { e.preventDefault(); scroll(id); }}>{label}</a>
+            {[['skills', 'Skills'], ['experience', 'Experience'], ['achievements', 'Achievements'], ['services', 'Services'], ['contact', 'Contact']].map(([id, label]) =>
+              <a key={id} href="#" data-section={id} onClick={(e) => { e.preventDefault(); scroll(id); }}>{label}</a>
             )}
           </div>
           <div className="nav-socials">
             <div className="status-dot"></div>
             <a href="https://www.linkedin.com/in/althaf-shajahan-angry/" target="_blank" rel="noopener noreferrer"><Icon name="linkedin" size={16} /></a>
             <a href="https://github.com/AnGrY-Althaf" target="_blank" rel="noopener noreferrer"><Icon name="github" size={16} /></a>
+            <a href="https://medium.com/@angry.althaf" target="_blank" rel="noopener noreferrer"><Icon name="medium" size={16} /></a>
             <a href="mailto:angry.althaf@gmail.com"><Icon name="mail" size={16} /></a>
           </div>
         </nav>);
@@ -2475,16 +3235,7 @@
               autoPlay
               muted
               playsInline
-              ref={(el) => {
-                if (el) {
-                  const saved = parseFloat(localStorage.getItem('heroVidTime') || '0');
-                  if (saved > 0) { el.currentTime = saved; }
-                  el.addEventListener('timeupdate', () => localStorage.setItem('heroVidTime', el.currentTime));
-                  el.addEventListener('ended', () => { el.pause(); localStorage.removeItem('heroVidTime'); });
-                }
-              }}
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center' }}>
-
               <source src={window.__resources ? window.__resources.heroBgVid : 'hero-bg.mp4'} type="video/mp4" />
             </video>
             {/* Hide watermark bottom-right */}
@@ -2525,6 +3276,10 @@
               </div>
             </div>
           </section>
+          <div className="hero-scroll-indicator">
+            <span>Scroll</span>
+            <div className="hero-scroll-line" />
+          </div>
         </div>);
 
     };
@@ -2545,28 +3300,32 @@
       const ref = useRef(null);
       const [vis, setVis] = useState(false);
       useEffect(() => {
-        const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: 0.15 });
+        const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: 0.1 });
         if (ref.current) obs.observe(ref.current);
         return () => obs.disconnect();
       }, []);
 
       return (
         <section id="skills" className="skills-section" ref={ref}>
+          <div className="section-ghost-num" style={{ right: '-20px' }}>01</div>
           <div className={`section-header section-fade ${vis ? 'in-view' : ''}`}>
-            <div className="section-tag">Capabilities</div>
-            <h2 className="section-title">Skill Matrix</h2>
+            <div className="section-tag"><span className="section-tag-inner">Capabilities</span></div>
+            <h2 className="section-title scramble-title">Skill Matrix</h2>
           </div>
           <div className="skills-grid">
-            {skillsData.map((s, i) =>
-              <div key={i} className={`skill-card section-fade ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 60}ms` }}>
-                <div className="skill-icon" style={{ color: 'var(--green)' }}>{s.icon}</div>
-                <div className="skill-name">{s.name}</div>
-                <div className="skill-sub">{s.sub}</div>
-                <div className="skill-bar">
-                  <div className="skill-bar-fill" style={{ width: vis ? `${s.level}%` : '0%' }}></div>
+            {skillsData.map((s, i) => {
+              const dir = i % 4 < 2 ? 'anim-left' : 'anim-right';
+              return (
+                <div key={i} className={`skill-card ${dir} ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 65}ms` }}>
+                  <div className="skill-icon" style={{ color: 'var(--green)' }}>{s.icon}</div>
+                  <div className="skill-name">{s.name}</div>
+                  <div className="skill-sub">{s.sub}</div>
+                  <div className="skill-bar">
+                    <div className="skill-bar-fill" style={{ width: vis ? `${s.level}%` : '0%' }}></div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })}
           </div>
         </section>);
 
@@ -2592,13 +3351,14 @@
       return (
         <section id="experience" ref={ref}>
           <div className="exp-section">
+            <div className="section-ghost-num" style={{ right: '-20px' }}>02</div>
             <div className={`section-header section-fade ${vis ? 'in-view' : ''}`}>
-              <div className="section-tag">History</div>
-              <h2 className="section-title">Experience</h2>
+              <div className="section-tag"><span className="section-tag-inner">History</span></div>
+              <h2 className="section-title scramble-title">Experience</h2>
             </div>
-            <div className="timeline">
+            <div className={`timeline ${vis ? 'line-drawn' : ''}`}>
               {exp.map((e, i) =>
-                <div key={i} className={`timeline-item section-fade ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 120}ms` }}>
+                <div key={i} className={`timeline-item anim-left ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 130}ms` }}>
                   <div className="timeline-period">{e.period}</div>
                   <div className="timeline-role">{e.role}</div>
                   <div className="timeline-company">{e.company}</div>
@@ -2609,12 +3369,12 @@
           </div>
           <div className="certs-section">
             <div className={`section-header section-fade ${vis ? 'in-view' : ''}`}>
-              <div className="section-tag">Credentials</div>
-              <h2 className="section-title">Certifications</h2>
+              <div className="section-tag"><span className="section-tag-inner">Credentials</span></div>
+              <h2 className="section-title scramble-title">Certifications</h2>
             </div>
             <div className="certs-grid">
               {['CRTA — Certified Red Team Analyst', 'CEH — Certified Ethical Hacker', 'CAP — Certified AppSec Practitioner', 'CNSP — Certified Network Security Practitioner', 'HTB ProLabs: Dante', 'HTB ProLabs: RastaLabs', 'HTB ProLabs: Poo'].map((c, i) =>
-                <div key={i} className={`cert-badge section-fade ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 60}ms` }}>{c}</div>
+                <div key={i} className={`cert-badge anim-scale ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 60}ms` }}>{c}</div>
               )}
             </div>
           </div>
@@ -2644,19 +3404,20 @@
       return (
         <section id="achievements" className="achieve-section" ref={ref}>
           <div className="achieve-inner">
+            <div className="section-ghost-num" style={{ right: '0' }}>03</div>
             <div className={`section-header section-fade ${vis ? 'in-view' : ''}`}>
-              <div className="section-tag">Recognition</div>
-              <h2 className="section-title">Hall of Fame</h2>
+              <div className="section-tag"><span className="section-tag-inner">Recognition</span></div>
+              <h2 className="section-title scramble-title">Hall of Fame</h2>
             </div>
             <div className="achieve-grid">
-              {items.map((a, i) =>
-                <div key={i} className={`achieve-card section-fade ${vis ? 'in-view' : ''}`} data-org={a.org} style={{ transitionDelay: `${i * 80}ms` }}>
+              {items.map((a, i) => (
+                <div key={i} className={`achieve-card anim-scale ${vis ? 'in-view' : ''}`} data-org={a.org} style={{ transitionDelay: `${i * 90}ms` }}>
                   <div className="achieve-glow"></div>
                   <div className="achieve-rank">{a.rank}</div>
                   <div className="achieve-org">{a.org}</div>
                   <div className="achieve-desc">{a.desc}</div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </section>);
@@ -2685,19 +3446,23 @@
       return (
         <section id="services" ref={ref}>
           <div className="services-section">
+            <div className="section-ghost-num" style={{ right: '-20px' }}>04</div>
             <div className={`section-header section-fade ${vis ? 'in-view' : ''}`}>
-              <div className="section-tag">Offerings</div>
-              <h2 className="section-title">Services</h2>
+              <div className="section-tag"><span className="section-tag-inner">Offerings</span></div>
+              <h2 className="section-title scramble-title">Services</h2>
             </div>
             <div className="services-grid">
-              {svcs.map((s, i) =>
-                <div key={i} className={`service-card section-fade ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 70}ms` }}>
-                  <div className="service-num">{s.num}</div>
-                  <div className="service-title">{s.title}</div>
-                  <div className="service-desc" style={{ whiteSpace: 'pre-line' }}>{s.desc}</div>
-                  <div className="service-corner"></div>
-                </div>
-              )}
+              {svcs.map((s, i) => {
+                const dir = i % 3 === 0 ? 'anim-left' : i % 3 === 1 ? 'section-fade' : 'anim-right';
+                return (
+                  <div key={i} className={`service-card ${dir} ${vis ? 'in-view' : ''}`} style={{ transitionDelay: `${i * 80}ms` }}>
+                    <div className="service-num">{s.num}</div>
+                    <div className="service-title">{s.title}</div>
+                    <div className="service-desc" style={{ whiteSpace: 'pre-line' }}>{s.desc}</div>
+                    <div className="service-corner"></div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>);
@@ -2717,12 +3482,13 @@
       return (
         <section id="contact" ref={ref}>
           <div className="contact-section">
+            <div className="section-ghost-num" style={{ right: '0' }}>05</div>
             <div className={`section-header section-fade ${vis ? 'in-view' : ''}`}>
-              <div className="section-tag">Reach Out</div>
-              <h2 className="section-title">Contact</h2>
+              <div className="section-tag"><span className="section-tag-inner">Reach Out</span></div>
+              <h2 className="section-title scramble-title">Contact</h2>
             </div>
             <div className="contact-grid">
-              <div className={`section-fade ${vis ? 'in-view' : ''}`} style={{ transitionDelay: '100ms' }}>
+              <div className={`anim-left ${vis ? 'in-view' : ''}`} style={{ transitionDelay: '120ms' }}>
                 <div className="contact-big-text">Let's<br /><span>Breach</span><br />Something.</div>
                 <p className="contact-sub">
                   Available for bug bounty collaboration,<br />
@@ -2730,7 +3496,7 @@
                   PGP available on request.
                 </p>
               </div>
-              <div className={`contact-links section-fade ${vis ? 'in-view' : ''}`} style={{ transitionDelay: '200ms' }}>
+              <div className={`contact-links anim-right ${vis ? 'in-view' : ''}`} style={{ transitionDelay: '220ms' }}>
                 <a className="contact-link" href="mailto:angry.althaf@gmail.com">
                   <Icon name="mail" size={18} />
                   <div>
@@ -2752,6 +3518,13 @@
                     <span className="contact-link-val">/AnGrY-Althaf</span>
                   </div>
                 </a>
+                <a className="contact-link" href="https://medium.com/@angry.althaf" target="_blank" rel="noopener noreferrer">
+                  <Icon name="medium" size={18} />
+                  <div>
+                    <span className="contact-link-label">Medium</span>
+                    <span className="contact-link-val">@angry.althaf</span>
+                  </div>
+                </a>
                 <button className="contact-link" style={{ cursor: 'pointer', textAlign: 'left', width: '100%' }} onClick={onTerminal}>
                   <Icon name="terminal" size={18} />
                   <div>
@@ -2766,6 +3539,32 @@
 
     };
 
+    // ─── STATS TICKER ───
+    const StatsTicker = () => {
+      const base = [
+        { num: '6+', label: 'Years\nExperience' },
+        { num: '3', label: 'CVEs\nDiscovered' },
+        { num: 'Top 1%', label: 'TryHackMe\nGlobal Rank' },
+        { num: '5', label: 'Hall of Fame\nEntries' },
+        { num: '60+', label: 'Companies\nSecured' },
+        { num: '200+', label: 'Machines\nPwned' },
+      ];
+      // Duplicate for seamless infinite loop
+      const stats = [...base, ...base];
+      return (
+        <div className="stats-ticker">
+          <div className="stats-ticker-track">
+            {stats.map((s, i) => (
+              <div key={i} className="stats-ticker-item">
+                <span className="stats-ticker-num">{s.num}</span>
+                <span className="stats-ticker-label" style={{ whiteSpace: 'pre-line' }}>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
     // ─── APP ───
     const App = () => {
       const [termOpen, setTermOpen] = useState(false);
@@ -2774,6 +3573,7 @@
         <div>
           <Navbar onTerminal={() => setTermOpen(true)} />
           <Hero onTerminal={() => setTermOpen(true)} />
+          <StatsTicker />
           <Skills />
           <Experience />
           <Achievements />
