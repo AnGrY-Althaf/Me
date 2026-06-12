@@ -1,0 +1,25 @@
+:root {
+  /* palette — warm near-black, bone type, single acid accent */
+  --bg: #0a0b09;
+  --bg-2: #0d0f0c;
+  --bg-3: #131611;
+  --ink: #eceee5;
+  --dim: #a2a799;
+  --faint: #5d6355;
+  --line: rgba(236, 238, 229, 0.08);
+  --line-2: rgba(236, 238, 229, 0.16);
+  --acid: #c6ff4a;
+  --acid-soft: rgba(198, 255, 74, 0.10);
+  --acid-border: rgba(198, 255, 74, 0.35);
+  --warn: #ff6240;
+  --ok: #c6ff4a;
+
+  /* type */
+  --display: 'Clash Display', 'Arial Black', sans-serif;
+  --body: 'Satoshi', 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* motion */
+  --ease: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-2: cubic-bezier(0.65, 0, 0.35, 1);
+}
