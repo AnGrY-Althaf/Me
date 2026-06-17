@@ -3,6 +3,7 @@
   --bg: #0a0b09;
   --bg-2: #0d0f0c;
   --bg-3: #131611;
+  --bg-4: #171a14;
   --ink: #eceee5;
   --dim: #a2a799;
   --faint: #5d6355;
@@ -11,8 +12,15 @@
   --acid: #c6ff4a;
   --acid-soft: rgba(198, 255, 74, 0.10);
   --acid-border: rgba(198, 255, 74, 0.35);
+  --cyan: #4af7ff;
+  --cyan-soft: rgba(74, 247, 255, 0.10);
+  --cyan-border: rgba(74, 247, 255, 0.28);
+  --hot: #ff3d7f;
+  --hot-soft: rgba(255, 61, 127, 0.10);
   --warn: #ff6240;
   --ok: #c6ff4a;
+  --shadow-acid: 0 0 40px rgba(198, 255, 74, 0.16);
+  --shadow-cyan: 0 0 44px rgba(74, 247, 255, 0.10);
 
   /* type */
   --display: 'Clash Display', 'Arial Black', sans-serif;

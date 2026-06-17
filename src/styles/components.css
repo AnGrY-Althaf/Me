@@ -37,9 +37,11 @@ html.js .preloader { display: flex; }
 }
 .nav.is-hidden { transform: translateY(-100%); }
 .nav.is-solid {
-  background: rgba(10, 11, 9, 0.7);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  background:
+    linear-gradient(90deg, rgba(198, 255, 74, 0.045), transparent 25%, rgba(74, 247, 255, 0.035) 76%, transparent),
+    rgba(10, 11, 9, 0.72);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
   border-bottom-color: var(--line);
 }
 .nav-inner {
@@ -106,9 +108,21 @@ html.js .preloader { display: flex; }
   font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.18em;
   text-transform: uppercase; color: #0a0b09; background: var(--acid);
   padding: 18px 32px; border-radius: 99px;
-  transition: box-shadow 0.4s, transform 0.4s var(--ease); will-change: transform;
+  transition: box-shadow 0.4s, transform 0.4s var(--ease), filter 0.4s; will-change: transform;
+  isolation: isolate;
+  overflow: hidden;
 }
-.btn-main:hover { box-shadow: 0 0 44px 0 rgba(198, 255, 74, 0.4); }
+.btn-main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 0 32%, rgba(255, 255, 255, 0.48) 46%, transparent 62%);
+  transform: translateX(-110%);
+  transition: transform 0.7s var(--ease);
+}
+.btn-main:hover { box-shadow: 0 0 44px 0 rgba(198, 255, 74, 0.4); filter: saturate(1.08); }
+.btn-main:hover::before { transform: translateX(110%); }
 .btn-main .arr { transition: transform 0.35s var(--ease); }
 .btn-main:hover .arr { transform: translateX(5px); }
 .btn-sub {
@@ -134,6 +148,19 @@ html.js .preloader { display: flex; }
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
   overflow: hidden; padding: 22px 0; background: var(--bg-2);
   display: flex; user-select: none;
+  --marquee-scan: 0%;
+  position: relative;
+}
+.marquee::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--bg-2), transparent 12%, transparent 88%, var(--bg-2)),
+    linear-gradient(90deg, transparent, rgba(74, 247, 255, 0.11), transparent);
+  background-size: 100% 100%, 34% 100%;
+  background-position: 0 0, var(--marquee-scan) 0;
 }
 .marquee-track { display: flex; flex-shrink: 0; animation: marquee 28s linear infinite; }
 @keyframes marquee { to { transform: translateX(-50%); } }

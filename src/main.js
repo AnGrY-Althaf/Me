@@ -15,6 +15,8 @@ import { initReveals } from './modules/reveals.js';
 import { initBlog } from './modules/blog.js';
 import { initMarqueeFx } from './modules/marqueeFx.js';
 import { initSkewFx } from './modules/skewFx.js';
+import { initGlitch } from './modules/glitch.js';
+import { initCinematicExperience } from './modules/cinematic.js';
 
 /* marquee: duplicate track for a seamless loop */
 const track = document.getElementById('marquee-track');
@@ -33,6 +35,8 @@ initRotator();
 initBlog();
 initMarqueeFx();
 initSkewFx();
+initGlitch();
+initCinematicExperience();
 
 const heroIntro = buildHeroIntro();
 runPreloader(lenis, (skipped) => {
