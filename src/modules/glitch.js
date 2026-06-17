@@ -61,13 +61,13 @@ export function initGlitch() {
     el.addEventListener('mouseenter', () => fire(), { passive: true });
   });
 
-  /* ambient cadence on the hero name only, paused when off-screen / hidden */
-  const hero = document.getElementById('hero-name');
-  if (hero?._fireGlitch) {
+  /* ambient cadence on the hero first name only, paused when off-screen / hidden */
+  const heroFirst = document.querySelector('#hero-name [data-glitch]');
+  if (heroFirst?._fireGlitch) {
     const tick = () => {
       const wait = 5200 + Math.random() * 5200;
       setTimeout(() => {
-        if (!document.hidden && hero.getBoundingClientRect().bottom > 0) hero._fireGlitch();
+        if (!document.hidden && heroFirst.getBoundingClientRect().bottom > 0) heroFirst._fireGlitch();
         tick();
       }, wait);
     };
