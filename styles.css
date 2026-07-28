@@ -319,10 +319,20 @@ blockquote {
   gap: 6px 18px;
 }
 
+/* Wraps by default — service scopes and post tags are long enough to
+   overflow a phone otherwise. `.nowrap` keeps date ranges on one line. */
 .entry-meta {
   font-size: 17px;
   color: var(--muted);
+}
+
+.entry-meta.nowrap {
   white-space: nowrap;
+}
+
+.post-title {
+  display: block;
+  margin-bottom: 4px;
 }
 
 .entry-org {
@@ -394,8 +404,9 @@ blockquote {
 }
 
 .post-title {
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--heading);
 }
 

@@ -1,11 +1,13 @@
 export const PROFILE = {
   name: 'Althaf Shajahan',
   alias: 'AnGrY',
+  role: 'Security Engineer',
   tagline: 'My notes on offensive security, bug bounty, and AI.',
   photo: '/mypic-anime.png',
   email: 'angry.althaf@gmail.com',
   linkedin: 'https://www.linkedin.com/in/althaf-shajahan-angry/',
   github: 'https://github.com/AnGrY-Althaf',
+  medium: 'https://medium.com/@angry.althaf',
 };
 
 export interface NavItem {
@@ -23,9 +25,9 @@ export const NAV: NavItem[] = [
 /* ------------------------------------------------------------ whoami */
 
 export const INTRO = [
-  'I break things to make them stronger. I work as a security researcher specialising in offensive security — bug bounty hunting, red team operations, CTF, and AI.',
-  'Six years in, I have hunted on HackerOne, YesWeHack and Bugcrowd, run adversary simulation engagements, and taught the next wave of operators. Lately I have been pointing the same lens at AI systems: agent tooling, MCP servers, and the attack surface nobody has finished mapping yet.',
-  'Reach out if you want a target looked at properly, need a red team engagement, or want help securing an AI product before it ships.',
+  'I break things to make them stronger. I am a Security Engineer at Veuz Concepts, working on product security, VAPT, and security architecture design.',
+  'Alongside that I hunt bug bounties on HackerOne, YesWeHack and Bugcrowd, with Hall of Fame entries at NASA, Mastercard, Sony and Dela. Before Veuz I led offensive research at Offenso Hacker Academy and ran red team operations at RedTeam Hacker Academy, where I built custom exploit frameworks and trained the next generation of security professionals.',
+  'Available for bug bounty collaboration, red team engagements, consulting and training.',
 ];
 
 export const CREED = 'Hack. Code. Secure.';
@@ -39,28 +41,37 @@ export const CONTACT = [
     href: 'https://www.linkedin.com/in/althaf-shajahan-angry/',
   },
   { label: 'github', value: 'AnGrY-Althaf', href: 'https://github.com/AnGrY-Althaf' },
-  { label: 'hackerone', value: 'bug bounty hunter', href: '' },
-  { label: 'yeswehack', value: 'bug bounty hunter', href: '' },
-  { label: 'bugcrowd', value: 'bug bounty hunter', href: '' },
+  { label: 'medium', value: '@angry.althaf', href: 'https://medium.com/@angry.althaf' },
+  { label: 'platforms', value: 'HackerOne · YesWeHack · Bugcrowd', href: '' },
+  { label: 'pgp', value: 'available on request', href: '' },
 ];
 
 export const QUICK_FACTS = [
-  { label: 'experience', value: '6+ years offensive security' },
-  { label: 'focus', value: 'web, api, android, cloud, AI / MCP' },
-  { label: 'platforms', value: 'HackerOne · YesWeHack · Bugcrowd' },
-  { label: 'based', value: 'India' },
+  { label: 'currently', value: 'Security Engineer at Veuz Concepts' },
+  { label: 'focus', value: 'product security, VAPT, security architecture' },
+  { label: 'hunting', value: 'HackerOne · YesWeHack · Bugcrowd' },
+  { label: 'hall of fame', value: 'NASA · Mastercard · Sony · Dela' },
 ];
 
 /* -------------------------------------------------------- experience */
 
 export const EXPERIENCE = [
   {
+    role: 'Security Engineer',
+    org: 'Veuz Concepts',
+    period: '2026 — present',
+    notes: [
+      'Product security, vulnerability assessment and penetration testing (VAPT).',
+      'Security architecture design and implementation.',
+    ],
+  },
+  {
     role: 'Senior Security Researcher',
     org: 'Offenso Hacker Academy',
-    period: '2025 — present',
+    period: '2025 — 2026',
     notes: [
-      'Leading offensive security research and internal tooling.',
-      'Training and mentoring the next wave of operators.',
+      'Led offensive security research and vulnerability assessment.',
+      'Ran adversarial simulation engagements.',
     ],
   },
   {
@@ -68,8 +79,8 @@ export const EXPERIENCE = [
     org: 'RedTeam Hacker Academy',
     period: '2023 — 2024',
     notes: [
-      'Adversary simulation and exploit development.',
-      'Built and delivered hands-on offensive security curriculum.',
+      'Conducted red team operations and developed custom exploit frameworks.',
+      'Trained the next generation of security professionals.',
     ],
   },
   {
@@ -77,8 +88,8 @@ export const EXPERIENCE = [
     org: 'HackerOne · YesWeHack · Bugcrowd',
     period: '2021 — present',
     notes: [
-      'Web, API and Android targets on live programmes.',
-      'Reporting reproducible impact — no theoretical findings.',
+      'Independent security research across global platforms.',
+      'Hall of Fame entries at NASA, Mastercard, Sony and Dela.',
     ],
   },
 ];
@@ -92,12 +103,12 @@ export const CREDENTIALS = [
 ];
 
 export const HALL_OF_FAME = [
-  { org: 'NASA', note: 'acknowledged' },
-  { org: 'Dell', note: 'acknowledged' },
-  { org: 'Mastercard', note: 'acknowledged' },
-  { org: 'Sony', note: 'acknowledged' },
-  { org: 'HackTheBox', note: 'Pro Hacker' },
-  { org: 'TryHackMe', note: 'Top 1%' },
+  { org: 'NASA', rank: 'Hall of Fame', note: 'Responsible disclosure — critical infrastructure' },
+  { org: 'Mastercard', rank: 'Hall of Fame', note: 'Financial platform security research' },
+  { org: 'Sony', rank: 'Hall of Fame', note: 'Consumer platform vulnerability chain' },
+  { org: 'Dela', rank: 'Hall of Fame', note: 'Enterprise application security finding' },
+  { org: 'HackTheBox', rank: 'Pro Hacker', note: 'Elite tier — consistent top ranking' },
+  { org: 'TryHackMe', rank: 'Top 1%', note: 'Global ranking across all challenges' },
 ];
 
 /* ----------------------------------------------------------- arsenal */
@@ -124,67 +135,54 @@ export const SKILLS = [
 ];
 
 export const SERVICES = [
+  { title: 'Penetration Testing', scope: 'Web · API · Mobile · Network', note: 'Full-scope adversarial assessment.' },
   {
-    title: 'Penetration testing',
-    note: 'Web, API, mobile and network engagements with reproducible proof.',
+    title: 'Red Team Operations',
+    scope: 'Adversarial simulation · Social engineering',
+    note: 'Persistence and lateral movement.',
   },
   {
-    title: 'Red teaming',
-    note: 'Adversarial simulation against people, process and perimeter.',
+    title: 'AI / MCP Integration',
+    scope: 'Security-aware AI deployments',
+    note: 'MCP attack surface assessment.',
   },
   {
-    title: 'AI integrations',
-    note: 'MCP servers, agent tooling, and LLM attack-surface review.',
+    title: 'Security Automation',
+    scope: 'Custom tooling · Python / Bash',
+    note: 'CI/CD security pipelines.',
   },
   {
-    title: 'Security automation',
-    note: 'Recon pipelines and custom scanners that scale with the target.',
+    title: 'Security Consultation',
+    scope: 'Architecture review · Threat modelling',
+    note: 'Compliance advisory.',
   },
   {
-    title: 'Security consultation',
-    note: 'Threat modelling and architecture review before code ships.',
-  },
-  {
-    title: 'Training',
-    note: 'Hands-on offensive security programmes and lab design.',
+    title: 'Training & Education',
+    scope: 'CTF workshops · Bootcamps',
+    note: 'Corporate security awareness.',
   },
 ];
 
 /* ----------------------------------------------------------- writing */
 
 /**
- * PLACEHOLDER POSTS — replace with your real ones.
- *
- * Set `href` to publish a link; entries with an empty `href` render as plain
- * text rather than a dead link, so an unfinished list never looks broken.
+ * Add new posts to the top. An entry with an empty `href` renders as plain
+ * text rather than a dead link, so a draft can sit here safely.
  */
 export const POSTS = [
   {
-    date: '2026',
-    title: 'Hunting IDOR at scale',
-    tag: 'bug bounty',
-    blurb: 'Placeholder — swap this for a real post.',
-    href: '',
+    date: '22 May 2026',
+    title:
+      'How I Chained Mass Assignment + PHP Type Juggling to Take Over Any Account on a Live Platform',
+    tag: 'bug bounty · appsec · yeswehack',
+    blurb: '',
+    href: 'https://medium.com/@angry.althaf/how-i-chained-mass-assignment-php-type-juggling-to-take-over-any-account-on-a-live-platform-8ad4b193e171',
   },
   {
-    date: '2025',
-    title: 'MCP servers as attack surface',
-    tag: 'ai security',
-    blurb: 'Placeholder — swap this for a real post.',
-    href: '',
-  },
-  {
-    date: '2025',
-    title: 'Recon automation that scales',
-    tag: 'tooling',
-    blurb: 'Placeholder — swap this for a real post.',
-    href: '',
-  },
-  {
-    date: '2024',
-    title: 'Notes from HTB Pro Labs',
-    tag: 'red team',
-    blurb: 'Placeholder — swap this for a real post.',
-    href: '',
+    date: '20 May 2026',
+    title: 'Stored XSS via Markdown URL Attribute Injection — How I Earned a €450 Bug Bounty',
+    tag: 'xss · appsec · bug bounty',
+    blurb: '',
+    href: 'https://medium.com/@angry.althaf/stored-xss-via-markdown-url-attribute-injection-how-i-earned-a-450-bug-bounty-48c40ae644ef',
   },
 ];

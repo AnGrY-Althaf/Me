@@ -10,7 +10,7 @@ const Experience: React.FC = () => (
         <li className="entry" key={job.role + job.period}>
           <div className="entry-head">
             <h3>{job.role}</h3>
-            <span className="entry-meta">{job.period}</span>
+            <span className="entry-meta nowrap">{job.period}</span>
           </div>
           <p className="entry-org">{job.org}</p>
           <ul>
@@ -33,11 +33,14 @@ const Experience: React.FC = () => (
     </ul>
 
     <h2>hall of fame</h2>
-    <ul className="pairs">
+    <ul className="entries">
       {HALL_OF_FAME.map((h) => (
-        <li key={h.org}>
-          <span className="k">{h.org}:</span>
-          <span className="v">{h.note}</span>
+        <li className="entry" key={h.org}>
+          <div className="entry-head">
+            <h3>{h.org}</h3>
+            <span className="entry-meta">{h.rank}</span>
+          </div>
+          <p className="entry-note">{h.note}</p>
         </li>
       ))}
     </ul>

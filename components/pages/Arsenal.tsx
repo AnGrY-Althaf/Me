@@ -22,7 +22,10 @@ const Arsenal: React.FC = () => (
     <ul className="entries">
       {SERVICES.map((s) => (
         <li className="entry" key={s.title}>
-          <h3>{s.title}</h3>
+          <div className="entry-head">
+            <h3>{s.title}</h3>
+            <span className="entry-meta">{s.scope}</span>
+          </div>
           <p className="entry-note">{s.note}</p>
         </li>
       ))}
