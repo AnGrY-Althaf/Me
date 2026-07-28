@@ -19,6 +19,7 @@ import {
   INK_DIM,
   INK_FAINT,
   cloudTexture,
+  galaxyTexture,
   lineStarTexture,
   markTexture,
   orbTexture,
@@ -29,7 +30,8 @@ import {
 } from './textures';
 import { PATH_LEN, READ_DIST, SECTION_COUNT, STATION_GAP, pathAt, stationAnchor, stationT } from './path';
 
-const PAPER = 0x121010;
+/** Deep space: near-black with just enough cool cast to read as sky. */
+const PAPER = 0x0b0a11;
 
 /** Scenery extends past both ends of the camera track. */
 const OVER_MIN = -0.06;
@@ -123,29 +125,58 @@ export class Flight {
 
   private buildStars() {
     const isSmall = window.innerWidth < 720;
-    const COUNT = isSmall ? 2600 : 5200;
+    const COUNT = isSmall ? 3200 : 6400;
     const position = new Float32Array(COUNT * 3);
     const scale = new Float32Array(COUNT);
     const phase = new Float32Array(COUNT);
+    const color = new Float32Array(COUNT * 3);
     const p = new THREE.Vector3();
 
-    for (let i = 0; i < COUNT; i++) {
+    // Cluster seeds: a third of the stars gather into loose clouds around
+    // these, which is what separates a galaxy from uniform white noise.
+    const CLUSTERS = 26;
+    const seeds: [number, number, number][] = [];
+    for (let k = 0; k < CLUSTERS; k++) {
       const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
       pathAt(Math.min(t, 1), p);
-      p.z = -t * PATH_LEN;
       const a = Math.random() * Math.PI * 2;
-      const r = 3 + Math.pow(Math.random(), 0.55) * 52;
-      position[i * 3] = p.x + Math.cos(a) * r * 1.25;
-      position[i * 3 + 1] = p.y + Math.sin(a) * r * 0.8;
-      position[i * 3 + 2] = p.z + (Math.random() - 0.5) * STATION_GAP;
+      const r = 14 + Math.random() * 40;
+      seeds.push([p.x + Math.cos(a) * r, p.y + Math.sin(a) * r * 0.8, -t * PATH_LEN]);
+    }
+
+    for (let i = 0; i < COUNT; i++) {
+      if (i % 3 === 0) {
+        const [sx, sy, sz] = seeds[Math.floor(Math.random() * CLUSTERS)];
+        const spread = 6 + Math.random() * 13;
+        position[i * 3] = sx + (Math.random() - 0.5) * spread * 2;
+        position[i * 3 + 1] = sy + (Math.random() - 0.5) * spread * 1.6;
+        position[i * 3 + 2] = sz + (Math.random() - 0.5) * spread * 4;
+      } else {
+        const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
+        pathAt(Math.min(t, 1), p);
+        p.z = -t * PATH_LEN;
+        const a = Math.random() * Math.PI * 2;
+        const r = 3 + Math.pow(Math.random(), 0.55) * 56;
+        position[i * 3] = p.x + Math.cos(a) * r * 1.25;
+        position[i * 3 + 1] = p.y + Math.sin(a) * r * 0.8;
+        position[i * 3 + 2] = p.z + (Math.random() - 0.5) * STATION_GAP;
+      }
+
       scale[i] = Math.pow(Math.random(), 2.2) * 3 + 0.5;
       phase[i] = Math.random() * Math.PI * 2;
+
+      // Faint stellar colour: mostly white, a few cool and a few warm.
+      const hue = Math.random();
+      if (hue < 0.16) color.set([0.72, 0.8, 1.0], i * 3);
+      else if (hue < 0.28) color.set([1.0, 0.87, 0.74], i * 3);
+      else color.set([1, 1, 1], i * 3);
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(position, 3));
     geo.setAttribute('aScale', new THREE.BufferAttribute(scale, 1));
     geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(color, 3));
 
     const mat = new THREE.ShaderMaterial({
       transparent: true,
@@ -157,9 +188,11 @@ export class Flight {
       vertexShader: /* glsl */ `
         attribute float aScale;
         attribute float aPhase;
+        attribute vec3 aColor;
         uniform float uTime;
         uniform float uPixelRatio;
         varying float vAlpha;
+        varying vec3 vColor;
 
         void main() {
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
@@ -171,17 +204,20 @@ export class Flight {
           float near = smoothstep(2.0, 14.0, dist);
           float far = 1.0 - smoothstep(160.0, 330.0, dist);
           vAlpha = tw * near * far;
+          vColor = aColor;
         }
       `,
       fragmentShader: /* glsl */ `
         varying float vAlpha;
+        varying vec3 vColor;
         void main() {
           float d = length(gl_PointCoord - 0.5) * 2.0;
           float core = smoothstep(0.42, 0.0, d);
           float halo = smoothstep(1.0, 0.2, d) * 0.28;
           float a = (core + halo) * vAlpha;
           if (a < 0.004) discard;
-          gl_FragColor = vec4(vec3(1.0), a);
+          // Cores burn toward white, haloes keep the star's colour.
+          gl_FragColor = vec4(mix(vColor, vec3(1.0), core * 0.7), a);
         }
       `,
     });
@@ -249,36 +285,111 @@ export class Flight {
     }
   }
 
-  /** Fog banks and pillars around the finale. */
+  /**
+   * Deep-space colour: nebula clouds the whole way down, a hazy band running
+   * alongside the track, distant galaxies, and the dense fog bank that the
+   * finale sits inside.
+   */
   private buildNebula() {
     const p = new THREE.Vector3();
-    for (let i = 0; i < 26; i++) {
-      const t = 0.84 + Math.random() * (OVER_MAX - 0.84);
+    const clouds = [0, 1, 2, 3, 4].map((k) => cloudTexture(256, 17 + k * 137));
+    // Barely-saturated deep-space tints — colour you feel more than see.
+    const TINTS = [0x6b78a8, 0x8a7fb0, 0x5f8fa0, 0xa08698, 0x7d7f9c];
+
+    const cloud = (
+      t: number,
+      opts: { w: number; h: number; x: number; y: number; alpha: number; tint?: number }
+    ) => {
       pathAt(Math.min(t, 1), p);
       p.z = -t * PATH_LEN;
-      const tex = cloudTexture(256, 7 + i * 13);
       const mat = new THREE.SpriteMaterial({
-        map: tex,
+        map: clouds[Math.floor(Math.random() * clouds.length)],
         transparent: true,
         depthWrite: false,
-        opacity: 0.6,
+        opacity: opts.alpha,
       });
+      mat.color.setHex(opts.tint ?? TINTS[Math.floor(Math.random() * TINTS.length)]);
       const s = new THREE.Sprite(mat);
-      const pillar = i % 4 === 0;
-      const w = pillar ? 14 + Math.random() * 10 : 34 + Math.random() * 30;
-      const h = pillar ? 26 + Math.random() * 16 : 12 + Math.random() * 9;
-      s.position.set(
-        p.x + (Math.random() - 0.5) * 46,
-        p.y - 8 - Math.random() * 8 + (pillar ? 6 : 0),
-        p.z + (Math.random() - 0.5) * STATION_GAP * 0.8
-      );
-      s.scale.set(w, h, 1);
+      s.position.set(p.x + opts.x, p.y + opts.y, p.z + (Math.random() - 0.5) * STATION_GAP * 0.7);
+      s.scale.set(opts.w, opts.h, 1);
       this.scene.add(s);
       this.twinklers.push({
         sprite: s,
-        base: 0.28 + Math.random() * 0.2,
-        speed: 0.1 + Math.random() * 0.12,
+        base: opts.alpha,
+        speed: 0.05 + Math.random() * 0.1,
         phase: Math.random() * Math.PI * 2,
+      });
+      return s;
+    };
+
+    // Drifting nebulae along the whole flight, held off-axis so they colour
+    // the void without washing out the type in the middle of frame.
+    for (let i = 0; i < 46; i++) {
+      const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
+      const side = Math.random() < 0.5 ? -1 : 1;
+      cloud(t, {
+        w: 40 + Math.random() * 46,
+        h: 22 + Math.random() * 26,
+        x: side * (26 + Math.random() * 38),
+        y: (Math.random() - 0.5) * 46,
+        alpha: 0.1 + Math.random() * 0.14,
+      });
+    }
+
+    // A faint band of haze running roughly parallel to the track — the
+    // galactic plane you are flying alongside.
+    for (let i = 0; i < 16; i++) {
+      const t = OVER_MIN + (i / 15) * (OVER_MAX - OVER_MIN);
+      cloud(t, {
+        w: 150 + Math.random() * 90,
+        h: 30 + Math.random() * 22,
+        x: (Math.random() - 0.5) * 30,
+        y: -26 - Math.random() * 22,
+        alpha: 0.07 + Math.random() * 0.07,
+      });
+    }
+
+    // Distant galaxies, small and far off-axis.
+    for (let i = 0; i < 7; i++) {
+      const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
+      pathAt(Math.min(t, 1), p);
+      p.z = -t * PATH_LEN;
+      const mat = new THREE.SpriteMaterial({
+        map: galaxyTexture(256, 31 + i * 97),
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.42,
+      });
+      mat.color.setHex(TINTS[i % TINTS.length]);
+      const s = new THREE.Sprite(mat);
+      const side = i % 2 === 0 ? 1 : -1;
+      s.position.set(
+        p.x + side * (34 + Math.random() * 30),
+        p.y + (Math.random() - 0.5) * 40,
+        p.z + (Math.random() - 0.5) * STATION_GAP
+      );
+      s.scale.setScalar(16 + Math.random() * 20);
+      this.scene.add(s);
+      this.twinklers.push({
+        sprite: s,
+        base: 0.42,
+        speed: 0.06 + Math.random() * 0.06,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+
+    // The finale fog bank: brighter, low, and close enough to sit behind the
+    // closing type — plus a few pillars rising out of it.
+    for (let i = 0; i < 26; i++) {
+      const t = 0.84 + Math.random() * (OVER_MAX - 0.84);
+      const pillar = i % 4 === 0;
+      cloud(t, {
+        w: pillar ? 14 + Math.random() * 10 : 34 + Math.random() * 30,
+        h: pillar ? 26 + Math.random() * 16 : 12 + Math.random() * 9,
+        x: (Math.random() - 0.5) * 46,
+        y: -8 - Math.random() * 8 + (pillar ? 6 : 0),
+        alpha: 0.28 + Math.random() * 0.2,
+        tint: 0x9aa0b4,
       });
     }
   }
@@ -347,36 +458,40 @@ export class Flight {
   /** 01 — name block left, framed photo right. */
   private buildIntro(i: number) {
     const g = new THREE.Group();
-    const leftX = -13.4;
+
+    const first = this.plane(
+      textTexture({ text: INTRO.first, font: DISPLAY, size: 3.05, weight: 900, outline: true, outlineWidth: 0.028 })
+    );
+    const last = this.plane(textTexture({ text: INTRO.last, font: DISPLAY, size: 3.15, weight: 900 }));
+    const paren = this.plane(
+      textTexture({ text: INTRO.paren, font: BODY, size: 0.95, weight: 500, color: INK_DIM, letterSpacing: 0.3 })
+    );
+    const roles = INTRO.roles.map((r) =>
+      this.plane(
+        textTexture({ text: `✦   ${r}`, font: BODY, size: 0.82, weight: 300, color: 'rgba(244,242,240,0.85)' })
+      )
+    );
+
+    // The photo gets its own column to the right of the widest name line, so
+    // a longer surname can never end up printed across the portrait.
+    const PHOTO_SLOT_W = 6.4;
+    const PHOTO_SLOT_H = 8.2;
+    const GAP = 2.6;
+
+    const nameW = Math.max(first.userData.w as number, last.userData.w as number);
+    const totalW = nameW + GAP + PHOTO_SLOT_W;
+    const leftX = -totalW / 2;
+    const photoCx = leftX + nameW + GAP + PHOTO_SLOT_W / 2;
+
     const put = (mesh: THREE.Mesh, y: number, indent = 0) => {
       mesh.position.set(leftX + indent + (mesh.userData.w as number) / 2, y, 0);
       g.add(mesh);
     };
 
-    put(
-      this.plane(
-        textTexture({ text: INTRO.first, font: DISPLAY, size: 3.05, weight: 900, outline: true, outlineWidth: 0.028 })
-      ),
-      3.5
-    );
-    put(this.plane(textTexture({ text: INTRO.last, font: DISPLAY, size: 3.15, weight: 900 })), 0.7);
-    put(
-      this.plane(
-        textTexture({ text: INTRO.paren, font: BODY, size: 0.95, weight: 500, color: INK_DIM, letterSpacing: 0.3 })
-      ),
-      -1.7,
-      0.15
-    );
-
-    INTRO.roles.forEach((r, k) => {
-      put(
-        this.plane(
-          textTexture({ text: `✦   ${r}`, font: BODY, size: 0.82, weight: 300, color: 'rgba(244,242,240,0.85)' })
-        ),
-        -3.5 - k * 1.32,
-        1.1
-      );
-    });
+    put(first, 3.5);
+    put(last, 0.7);
+    put(paren, -1.7, 0.15);
+    roles.forEach((row, k) => put(row, -3.5 - k * 1.32, 1.1));
 
     // Photo, grayscaled through canvas, inside a slightly offset thin frame.
     const img = new Image();
@@ -391,14 +506,20 @@ export class Flight {
       const tex = new THREE.CanvasTexture(c);
       tex.colorSpace = THREE.SRGBColorSpace;
 
+      // Fit inside the reserved slot whatever the asset's real proportions.
       const aspect = img.naturalWidth / img.naturalHeight || 1;
-      const ph = 8.2;
-      const pw = Math.min(ph * aspect, 8.6);
+      let ph = PHOTO_SLOT_H;
+      let pw = ph * aspect;
+      if (pw > PHOTO_SLOT_W) {
+        pw = PHOTO_SLOT_W;
+        ph = pw / aspect;
+      }
+
       const photo = new THREE.Mesh(
         new THREE.PlaneGeometry(pw, ph),
         new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, fog: false })
       );
-      photo.position.set(10.6, 0.5, 0);
+      photo.position.set(photoCx, 0.5, 0);
       g.add(photo);
 
       const fw = pw / 2 + 0.4;
@@ -415,7 +536,7 @@ export class Flight {
         frameGeo,
         new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.7, fog: false })
       );
-      frame.position.set(10.75, 0.65, 0.01);
+      frame.position.set(photoCx + 0.15, 0.65, 0.01);
       g.add(frame);
 
       // Late additions register themselves for fading.

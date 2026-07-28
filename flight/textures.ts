@@ -214,6 +214,66 @@ export function cloudTexture(size = 256, seed = 1): THREE.CanvasTexture {
   return new THREE.CanvasTexture(c);
 }
 
+/**
+ * A distant galaxy: bright elliptical core wrapped in swept spiral haze.
+ * Rendered white; tint comes from the sprite material so one texture can
+ * serve several colours.
+ */
+export function galaxyTexture(size = 256, seed = 1): THREE.CanvasTexture {
+  const c = makeCanvas(size, size);
+  const ctx = c.getContext('2d')!;
+  let s = seed;
+  const rnd = () => {
+    s = (s * 16807) % 2147483647;
+    return s / 2147483647;
+  };
+
+  const cx = size / 2;
+  ctx.translate(cx, cx);
+  ctx.rotate(rnd() * Math.PI);
+  // Squash it so most galaxies read as tilted discs rather than face-on.
+  ctx.scale(1, 0.34 + rnd() * 0.5);
+
+  // Spiral arms: wide, low-alpha strokes swept out from the core.
+  const arms = 2 + Math.floor(rnd() * 2);
+  for (let a = 0; a < arms; a++) {
+    ctx.save();
+    ctx.rotate((a / arms) * Math.PI * 2);
+    ctx.beginPath();
+    for (let k = 0; k <= 40; k++) {
+      const t = k / 40;
+      const ang = t * 2.5;
+      const r = t * size * 0.46;
+      const x = Math.cos(ang) * r;
+      const y = Math.sin(ang) * r;
+      if (k === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(255,255,255,${0.05 + rnd() * 0.05})`;
+    ctx.lineWidth = size * (0.07 + rnd() * 0.06);
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Halo, then core.
+  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.46);
+  halo.addColorStop(0, 'rgba(255,255,255,0.3)');
+  halo.addColorStop(0.35, 'rgba(255,255,255,0.09)');
+  halo.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(-cx, -cx, size, size);
+
+  const core = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.13);
+  core.addColorStop(0, 'rgba(255,255,255,0.85)');
+  core.addColorStop(0.5, 'rgba(255,255,255,0.28)');
+  core.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = core;
+  ctx.fillRect(-cx, -cx, size, size);
+
+  return new THREE.CanvasTexture(c);
+}
+
 /** The brand mark: square frame + oval + inner rule, echoing an ornate O. */
 export function markTexture(size = 512, alpha = 1): THREE.CanvasTexture {
   const c = makeCanvas(size, size);

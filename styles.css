@@ -5,7 +5,7 @@
    ============================================================ */
 
 :root {
-  --paper: #121010;
+  --paper: #0b0a11;
   --ink: #f4f2f0;
   --ink-dim: rgba(244, 242, 240, 0.55);
   --ink-faint: rgba(244, 242, 240, 0.34);
@@ -388,7 +388,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(10, 9, 9, 0.82);
+  background: rgba(7, 6, 11, 0.84);
   animation: fade-in 0.35s var(--ease);
 }
 
@@ -429,7 +429,7 @@ body {
 .case-media {
   position: relative;
   aspect-ratio: 16 / 9;
-  background: #0b0a0a;
+  background: #08070d;
   overflow: hidden;
 }
 
@@ -614,7 +614,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(9, 8, 8, 0.72);
+  background: rgba(7, 6, 11, 0.74);
   backdrop-filter: blur(10px);
   animation: fade-in 0.35s var(--ease);
 }
@@ -625,7 +625,7 @@ body {
   width: 100%;
   max-width: 720px;
   height: min(600px, 82vh);
-  background: rgba(14, 13, 13, 0.96);
+  background: rgba(13, 12, 18, 0.96);
   border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
