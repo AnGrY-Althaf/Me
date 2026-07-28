@@ -12,6 +12,7 @@ export const SECTIONS: SectionMeta[] = [
   { id: 'numbers', label: 'numbers' },
   { id: 'experience', label: 'experience' },
   { id: 'credentials', label: 'credentials' },
+  { id: 'writing', label: 'writing' },
   { id: 'manifesto', label: 'manifesto' },
   { id: 'talk', label: "let's talk" },
 ];
@@ -123,7 +124,24 @@ export const CREDENTIALS = [
   { code: 'HTB', title: 'Pro Labs — Dante · RastaLabs · POO', meta: 'HACKTHEBOX' },
 ];
 
-/** 08 — manifesto: question deep in space, answer at the nebula */
+/**
+ * 08 — writing.
+ *
+ * PLACEHOLDER POSTS. Swap the titles, dates and tags for your real ones and
+ * paste each post's link into `url`. Entries with an empty `url` render as
+ * plain text — no pointer cursor, nothing to click — so an unfinished list
+ * never looks broken.
+ */
+export const BLOG_HEAD = { title: 'Writing', hint: 'CLICK TO READ' };
+
+export const BLOG = [
+  { date: '2K26', title: 'Hunting IDOR at scale', tag: 'BUG BOUNTY', url: '' },
+  { date: '2K25', title: 'MCP servers as attack surface', tag: 'AI SECURITY', url: '' },
+  { date: '2K25', title: 'Recon automation that scales', tag: 'TOOLING', url: '' },
+  { date: '2K24', title: 'Notes from HTB Pro Labs', tag: 'RED TEAM', url: '' },
+];
+
+/** 09 — manifesto: question deep in space, answer at the nebula */
 export const MANIFESTO = {
   question: ['Why break things at all?', "Isn't hacking destructive?"],
   answer: ['Offense is a function.', 'Every hole I find is one', 'nobody else gets to use.'],

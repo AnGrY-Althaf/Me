@@ -7,12 +7,13 @@ interface Props {
   onReady: () => void;
   onCaseClick: (index: number) => void;
   onEmailClick: () => void;
+  onPostClick: (url: string) => void;
 }
 
-const Canvas: React.FC<Props> = ({ subscribe, onReady, onCaseClick, onEmailClick }) => {
+const Canvas: React.FC<Props> = ({ subscribe, onReady, onCaseClick, onEmailClick, onPostClick }) => {
   const holder = useRef<HTMLDivElement>(null);
-  const cbs = useRef({ onReady, onCaseClick, onEmailClick });
-  cbs.current = { onReady, onCaseClick, onEmailClick };
+  const cbs = useRef({ onReady, onCaseClick, onEmailClick, onPostClick });
+  cbs.current = { onReady, onCaseClick, onEmailClick, onPostClick };
 
   useEffect(() => {
     const el = holder.current;
@@ -28,6 +29,7 @@ const Canvas: React.FC<Props> = ({ subscribe, onReady, onCaseClick, onEmailClick
     }
     flight.onCaseClick = (i) => cbs.current.onCaseClick(i);
     flight.onEmailClick = () => cbs.current.onEmailClick();
+    flight.onPostClick = (url) => cbs.current.onPostClick(url);
 
     let first = true;
     const off = subscribe((f) => {

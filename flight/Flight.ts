@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import {
+  BLOG,
+  BLOG_HEAD,
   CASES,
   CASES_HEAD,
   CREDENTIALS,
@@ -89,6 +91,7 @@ export class Flight {
 
   onCaseClick?: (index: number) => void;
   onEmailClick?: () => void;
+  onPostClick?: (url: string) => void;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -324,15 +327,15 @@ export class Flight {
 
     // Drifting nebulae along the whole flight, held off-axis so they colour
     // the void without washing out the type in the middle of frame.
-    for (let i = 0; i < 46; i++) {
+    for (let i = 0; i < 54; i++) {
       const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
       const side = Math.random() < 0.5 ? -1 : 1;
       cloud(t, {
-        w: 40 + Math.random() * 46,
-        h: 22 + Math.random() * 26,
-        x: side * (26 + Math.random() * 38),
+        w: 44 + Math.random() * 50,
+        h: 24 + Math.random() * 28,
+        x: side * (24 + Math.random() * 38),
         y: (Math.random() - 0.5) * 46,
-        alpha: 0.1 + Math.random() * 0.14,
+        alpha: 0.2 + Math.random() * 0.22,
       });
     }
 
@@ -342,10 +345,10 @@ export class Flight {
       const t = OVER_MIN + (i / 15) * (OVER_MAX - OVER_MIN);
       cloud(t, {
         w: 150 + Math.random() * 90,
-        h: 30 + Math.random() * 22,
+        h: 32 + Math.random() * 24,
         x: (Math.random() - 0.5) * 30,
         y: -26 - Math.random() * 22,
-        alpha: 0.07 + Math.random() * 0.07,
+        alpha: 0.14 + Math.random() * 0.12,
       });
     }
 
@@ -358,7 +361,7 @@ export class Flight {
         map: galaxyTexture(256, 31 + i * 97),
         transparent: true,
         depthWrite: false,
-        opacity: 0.42,
+        opacity: 0.6,
       });
       mat.color.setHex(TINTS[i % TINTS.length]);
       const s = new THREE.Sprite(mat);
@@ -372,7 +375,7 @@ export class Flight {
       this.scene.add(s);
       this.twinklers.push({
         sprite: s,
-        base: 0.42,
+        base: 0.6,
         speed: 0.06 + Math.random() * 0.06,
         phase: Math.random() * Math.PI * 2,
       });
@@ -451,8 +454,80 @@ export class Flight {
     this.buildNumbers(4);
     this.buildCases(5);
     this.buildCredentials(6);
-    this.buildManifesto(7);
-    this.buildTalk(8);
+    this.buildBlog(7);
+    this.buildManifesto(8);
+    this.buildTalk(9);
+  }
+
+  /** 08 — writing: dated post rows, clickable when a URL is set. */
+  private buildBlog(i: number) {
+    const g = new THREE.Group();
+
+    const title = this.plane(
+      textTexture({ text: BLOG_HEAD.title, font: BODY, size: 1.6, weight: 400, color: 'rgba(244,242,240,0.92)' })
+    );
+    title.position.set(0, 4.6, 0);
+    g.add(title);
+
+    const hasLinks = BLOG.some((b) => b.url);
+    if (hasLinks) {
+      const hint = this.plane(
+        textTexture({ text: BLOG_HEAD.hint, font: BODY, size: 0.56, weight: 400, color: INK_FAINT, letterSpacing: 0.4 })
+      );
+      hint.position.set(0, 3.5, 0);
+      g.add(hint);
+    }
+
+    // Build every row first, then lay the three columns out from the widest
+    // title — otherwise a long headline runs straight into its tag.
+    const rows = BLOG.map((post) => ({
+      post,
+      date: this.plane(
+        textTexture({ text: post.date, font: BODY, size: 0.6, weight: 400, color: INK_FAINT, letterSpacing: 0.2 })
+      ),
+      label: this.plane(
+        textTexture({ text: post.title, font: BODY, size: 0.95, weight: 300, color: 'rgba(244,242,240,0.88)' })
+      ),
+      tag: this.plane(
+        textTexture({ text: post.tag, font: BODY, size: 0.48, weight: 400, color: INK_FAINT, letterSpacing: 0.26 })
+      ),
+    }));
+
+    const w = (m: THREE.Mesh) => m.userData.w as number;
+    const dateColW = Math.max(...rows.map((r) => w(r.date))) + 1.4;
+    const titleColW = Math.max(...rows.map((r) => w(r.label)));
+    const tagColW = Math.max(...rows.map((r) => w(r.tag)));
+    const GAP = 1.8;
+
+    const total = dateColW + titleColW + GAP + tagColW;
+    const left = -total / 2;
+    const titleX = left + dateColW;
+    const tagX = titleX + titleColW + GAP;
+
+    rows.forEach((r, k) => {
+      const y = 1.6 - k * 1.9;
+      const z = -k * 3;
+
+      r.date.position.set(left + w(r.date) / 2, y, z);
+      r.label.position.set(titleX + w(r.label) / 2, y, z);
+      r.tag.position.set(tagX + w(r.tag) / 2, y, z);
+      g.add(r.date, r.label, r.tag);
+
+      // Only wire a hit-area when there is somewhere to go, so an unfilled
+      // list never offers a pointer cursor that leads nowhere.
+      if (r.post.url) {
+        const hit = new THREE.Mesh(
+          new THREE.PlaneGeometry(titleColW + 2, 1.6),
+          new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+        );
+        hit.position.set(titleX + titleColW / 2, y, z - 0.01);
+        hit.userData.postUrl = r.post.url;
+        g.add(hit);
+        this.clickables.push(hit);
+      }
+    });
+
+    this.mount(i, g);
   }
 
   /** 01 — name block left, framed photo right. */
@@ -961,6 +1036,7 @@ export class Flight {
     if (!hits.length) return;
     const data = hits[0].object.userData;
     if (typeof data.caseIndex === 'number') this.onCaseClick?.(data.caseIndex);
+    else if (typeof data.postUrl === 'string') this.onPostClick?.(data.postUrl);
     else if (data.email) this.onEmailClick?.();
   };
 

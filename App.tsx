@@ -47,6 +47,9 @@ const App: React.FC = () => {
   const onEmailClick = useCallback(() => {
     window.location.href = `mailto:${TALK.email}`;
   }, []);
+  const onPostClick = useCallback((url: string) => {
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  }, []);
 
   return (
     <div className="stage">
@@ -56,6 +59,7 @@ const App: React.FC = () => {
           onReady={onReady}
           onCaseClick={onCaseClick}
           onEmailClick={onEmailClick}
+          onPostClick={onPostClick}
         />
       )}
 
