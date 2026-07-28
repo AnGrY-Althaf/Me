@@ -504,6 +504,15 @@ export class Flight {
     const titleX = left + dateColW;
     const tagX = titleX + titleColW + GAP;
 
+    // Real post titles are far longer than any placeholder, and a wide row
+    // clips its date and tag off both edges on a portrait screen. Scale the
+    // rows as a unit to a fixed width budget — the outer group is left alone
+    // so the responsive scale in resize() still composes with this.
+    const WIDTH_BUDGET = 29;
+    const inner = new THREE.Group();
+    if (total > WIDTH_BUDGET) inner.scale.setScalar(WIDTH_BUDGET / total);
+    g.add(inner);
+
     rows.forEach((r, k) => {
       const y = 1.6 - k * 1.9;
       const z = -k * 3;
@@ -511,7 +520,7 @@ export class Flight {
       r.date.position.set(left + w(r.date) / 2, y, z);
       r.label.position.set(titleX + w(r.label) / 2, y, z);
       r.tag.position.set(tagX + w(r.tag) / 2, y, z);
-      g.add(r.date, r.label, r.tag);
+      inner.add(r.date, r.label, r.tag);
 
       // Only wire a hit-area when there is somewhere to go, so an unfilled
       // list never offers a pointer cursor that leads nowhere.
@@ -522,7 +531,7 @@ export class Flight {
         );
         hit.position.set(titleX + titleColW / 2, y, z - 0.01);
         hit.userData.postUrl = r.post.url;
-        g.add(hit);
+        inner.add(hit);
         this.clickables.push(hit);
       }
     });

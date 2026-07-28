@@ -33,7 +33,7 @@ export const INTRO = {
   first: 'ALTHAF',
   last: 'SHAJAHAN',
   paren: '( ANGRY )',
-  roles: ['Security Researcher', 'Bug Bounty Hunter', 'Red Teamer', 'CTF & AI'],
+  roles: ['Security Engineer', 'Bug Bounty Hunter', 'Red Teamer', 'CTF & AI'],
 };
 
 /** 02 — pitch */
@@ -52,7 +52,7 @@ export const HALL = [
   { name: 'NASA', scale: 1.35 },
   { name: 'Mastercard', scale: 1.1 },
   { name: 'Sony', scale: 1.25 },
-  { name: 'Dell', scale: 0.95 },
+  { name: 'Dela', scale: 0.95 },
   { name: 'HackerOne', scale: 0.8 },
   { name: 'Bugcrowd', scale: 0.7 },
   { name: 'YesWeHack', scale: 0.75 },
@@ -70,13 +70,13 @@ export const STORY = {
     'Python / Go automation builder',
     'CTF addict — workaholic :)',
   ],
-  meta: 'AnGrY · security researcher · Earth',
+  meta: 'AnGrY · security engineer · Earth',
 };
 
 /** 05 — numbers: giant outlined numerals with captions */
 export const NUMBERS = [
   { n: '+6', caption: 'years offensive', giant: true },
-  { n: '+80', caption: 'bugs reported' },
+  { n: '4', caption: 'hall of fame' },
   { n: '5', caption: 'certifications' },
   { n: '3', caption: 'bounty platforms' },
   { n: '1%', caption: 'tryhackme top' },
@@ -85,13 +85,22 @@ export const NUMBERS = [
 /** 06 — experience, presented as click-to-expand case studies */
 export const CASES = [
   {
+    title: 'Security Engineer',
+    org: 'VEUZ CONCEPTS',
+    year: '2K26',
+    period: '2026 — present',
+    company: 'Veuz Concepts',
+    note: 'Product security, vulnerability assessment and penetration testing (VAPT), and security architecture design and implementation.',
+    tags: ['Product Security', 'VAPT', 'Architecture'],
+  },
+  {
     title: 'Senior Security Researcher',
     org: 'OFFENSO',
     year: '2K25',
-    period: '2025 — present',
+    period: '2025 — 2026',
     company: 'Offenso Hacker Academy',
-    note: 'Leading offensive research, building tooling and training the next wave of operators.',
-    tags: ['Red Team', 'Research', 'Training', 'Tooling'],
+    note: 'Led offensive security research, vulnerability assessment, and adversarial simulation engagements.',
+    tags: ['Red Team', 'Research', 'Adversary Sim'],
   },
   {
     title: 'Security Researcher',
@@ -99,8 +108,8 @@ export const CASES = [
     year: '2K23',
     period: '2023 — 2024',
     company: 'RedTeam Hacker Academy',
-    note: 'Adversary simulation, exploit development and hands-on offensive security curriculum.',
-    tags: ['Adversary Sim', 'Exploit Dev', 'Curriculum'],
+    note: 'Conducted red team operations, developed custom exploit frameworks, and trained the next generation of security professionals.',
+    tags: ['Red Team Ops', 'Exploit Dev', 'Training'],
   },
   {
     title: 'Bug Bounty Hunter',
@@ -108,7 +117,7 @@ export const CASES = [
     year: '2K21',
     period: '2021 — present',
     company: 'HackerOne · YesWeHack · Bugcrowd',
-    note: 'Web, API and Android targets. Real impact, reproducible proof — no theory.',
+    note: 'Active independent security researcher with Hall of Fame entries at NASA, Mastercard, Sony and Dela.',
     tags: ['Web', 'API', 'Android', 'Recon'],
   },
 ];
@@ -125,20 +134,31 @@ export const CREDENTIALS = [
 ];
 
 /**
- * 08 — writing.
- *
- * PLACEHOLDER POSTS. Swap the titles, dates and tags for your real ones and
- * paste each post's link into `url`. Entries with an empty `url` render as
- * plain text — no pointer cursor, nothing to click — so an unfinished list
- * never looks broken.
+ * 08 — writing. Titles are shortened for the 3D layout; the full headline
+ * lives on Medium. An entry with an empty `url` renders as plain text —
+ * no pointer cursor, nothing to click — so a draft can sit here safely.
  */
 export const BLOG_HEAD = { title: 'Writing', hint: 'CLICK TO READ' };
 
 export const BLOG = [
-  { date: '2K26', title: 'Hunting IDOR at scale', tag: 'BUG BOUNTY', url: '' },
-  { date: '2K25', title: 'MCP servers as attack surface', tag: 'AI SECURITY', url: '' },
-  { date: '2K25', title: 'Recon automation that scales', tag: 'TOOLING', url: '' },
-  { date: '2K24', title: 'Notes from HTB Pro Labs', tag: 'RED TEAM', url: '' },
+  {
+    date: '2K26',
+    title: 'Mass Assignment + PHP Type Juggling → ATO',
+    tag: 'BUG BOUNTY',
+    url: 'https://medium.com/@angry.althaf/how-i-chained-mass-assignment-php-type-juggling-to-take-over-any-account-on-a-live-platform-8ad4b193e171',
+  },
+  {
+    date: '2K26',
+    title: 'Stored XSS via Markdown URL Injection',
+    tag: 'APPSEC',
+    url: 'https://medium.com/@angry.althaf/stored-xss-via-markdown-url-attribute-injection-how-i-earned-a-450-bug-bounty-48c40ae644ef',
+  },
+  {
+    date: '—',
+    title: 'All posts on Medium',
+    tag: '@ANGRY.ALTHAF',
+    url: 'https://medium.com/@angry.althaf',
+  },
 ];
 
 /** 09 — manifesto: question deep in space, answer at the nebula */
