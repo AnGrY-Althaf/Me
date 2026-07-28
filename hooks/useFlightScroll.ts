@@ -6,7 +6,7 @@ export interface Frame {
   progress: number;
   /** Undamped scroll position, 0..1. */
   raw: number;
-  /** Change in progress per second — drives fov punch and streak stretch. */
+  /** Change in progress per second. */
   velocity: number;
   time: number;
   dt: number;
@@ -22,15 +22,18 @@ interface Options {
   enabled?: boolean;
 }
 
+/** Time constant of the scroll damping — the floaty feel of the flight. */
+const TAU = 0.85;
+
 /**
  * Owns the single rAF loop for the whole page.
  *
  * The document never scrolls; a fixed overflow container does, and its
  * position is normalised to 0..1, damped, and pushed to subscribers.
- * Per-frame consumers (canvas, panels, progress rail) write to the DOM
- * directly so React only re-renders when the active section changes.
+ * Per-frame consumers write to the DOM/canvas directly so React only
+ * re-renders when the active section changes.
  */
-export function useFlightScroll({ sectionCount, pagesPerSection = 2.75, enabled = true }: Options) {
+export function useFlightScroll({ sectionCount, pagesPerSection = 2.44, enabled = true }: Options) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const subsRef = useRef(new Set<Subscriber>());
   const frameRef = useRef<Frame>({
@@ -60,19 +63,13 @@ export function useFlightScroll({ sectionCount, pagesPerSection = 2.75, enabled 
     };
   }, []);
 
-  const scrollToSection = useCallback(
-    (index: number) => {
-      const el = scrollerRef.current;
-      if (!el) return;
-      const max = el.scrollHeight - el.clientHeight;
-      // Jump the scroll position outright and let the damping in the rAF loop
-      // fly there. Native smooth scrolling over 20+ viewports is slow and
-      // browser-dependent, and this way the trip reads as a warp: velocity
-      // spikes, so the fov widens and the streaks stretch.
-      el.scrollTo({ top: stationT(index, sectionCount) * max, behavior: 'auto' });
-    },
-    [sectionCount]
-  );
+  const scrollToSection = useCallback((index: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const max = el.scrollHeight - el.clientHeight;
+    // Jump the raw position; the damping flies the camera there.
+    el.scrollTo({ top: stationT(index) * max, behavior: 'auto' });
+  }, []);
 
   /* ------------------------------------------------------------ rAF loop */
   useEffect(() => {
@@ -91,16 +88,13 @@ export function useFlightScroll({ sectionCount, pagesPerSection = 2.75, enabled 
       const max = el ? el.scrollHeight - el.clientHeight : 0;
       const raw = el && max > 0 ? el.scrollTop / max : 0;
 
-      // Critically-damped-ish follow. Frame-rate independent so a 144Hz
-      // display doesn't glide faster than a 60Hz one.
       const prev = smooth;
-      const k = 1 - Math.pow(0.0006, dt);
-      smooth += (raw - smooth) * k;
+      smooth += (raw - smooth) * (1 - Math.exp(-dt / TAU));
 
       const p = pointerTarget.current;
       const f = frameRef.current;
-      f.pointer.x += (p.x - f.pointer.x) * Math.min(1, dt * 3.4);
-      f.pointer.y += (p.y - f.pointer.y) * Math.min(1, dt * 3.4);
+      f.pointer.x += (p.x - f.pointer.x) * Math.min(1, dt * 3);
+      f.pointer.y += (p.y - f.pointer.y) * Math.min(1, dt * 3);
       f.progress = smooth;
       f.raw = raw;
       f.velocity = dt > 0 ? (smooth - prev) / dt : 0;
@@ -109,11 +103,11 @@ export function useFlightScroll({ sectionCount, pagesPerSection = 2.75, enabled 
 
       subsRef.current.forEach((fn) => fn(f));
 
-      // Cheap: only pushes through React when the nearest station changes.
+      // Only pushes through React when the nearest station changes.
       let nearest = 0;
       let best = Infinity;
       for (let i = 0; i < sectionCount; i++) {
-        const d = Math.abs(smooth - stationT(i, sectionCount));
+        const d = Math.abs(smooth - stationT(i));
         if (d < best) {
           best = d;
           nearest = i;
@@ -136,9 +130,9 @@ export function useFlightScroll({ sectionCount, pagesPerSection = 2.75, enabled 
       pointerTarget.current.y = (e.clientY / window.innerHeight) * 2 - 1;
     };
 
-    // Content panels sit above the scroller, so wheel events land on them
-    // instead. Forward everything to the scroller by hand unless the cursor
-    // is over something that scrolls on its own (the terminal log).
+    // The canvas sits above the scroller, so wheel events land on it.
+    // Forward everything to the scroller unless the cursor is over an
+    // element that scrolls on its own (terminal log, case overlay).
     const onWheel = (e: WheelEvent) => {
       const el = scrollerRef.current;
       if (!el || !enabledRef.current) return;
@@ -155,21 +149,21 @@ export function useFlightScroll({ sectionCount, pagesPerSection = 2.75, enabled 
       if (!el || !enabledRef.current) return;
       const page = window.innerHeight;
       const step: Record<string, number> = {
-        ArrowDown: page * 0.28,
-        ArrowUp: -page * 0.28,
+        ArrowDown: page * 0.3,
+        ArrowUp: -page * 0.3,
         PageDown: page * 0.9,
         PageUp: -page * 0.9,
         ' ': page * 0.9,
       };
       if (e.key in step) {
         e.preventDefault();
-        el.scrollBy({ top: step[e.key], behavior: 'smooth' });
+        el.scrollTop += step[e.key];
       } else if (e.key === 'Home') {
         e.preventDefault();
-        el.scrollTo({ top: 0, behavior: 'smooth' });
+        el.scrollTop = 0;
       } else if (e.key === 'End') {
         e.preventDefault();
-        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        el.scrollTop = el.scrollHeight;
       }
     };
 

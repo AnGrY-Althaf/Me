@@ -1,12 +1,39 @@
 import * as THREE from 'three';
-import { PATH_LEN, START_Z, pathAt, stationHalfWindow, stationT, structureT } from './path';
+import {
+  CASES,
+  CASES_HEAD,
+  CREDENTIALS,
+  HALL,
+  INTRO,
+  MANIFESTO,
+  NUMBERS,
+  PITCH,
+  PROFILE,
+  STORY,
+  TALK,
+} from '../content';
+import {
+  BODY,
+  DISPLAY,
+  INK,
+  INK_DIM,
+  INK_FAINT,
+  cloudTexture,
+  lineStarTexture,
+  markTexture,
+  orbTexture,
+  sparkleTexture,
+  starTexture,
+  textTexture,
+  type BuiltTexture,
+} from './textures';
+import { PATH_LEN, READ_DIST, SECTION_COUNT, STATION_GAP, pathAt, stationAnchor, stationT } from './path';
 
 const PAPER = 0x121010;
-const INK = 0xf4f2f0;
 
-/** Scenery is built a little before the start and well past the finish. */
-const OVERSHOOT_MIN = -0.04;
-const OVERSHOOT_MAX = 1.16;
+/** Scenery extends past both ends of the camera track. */
+const OVER_MIN = -0.06;
+const OVER_MAX = 1.0 + (READ_DIST * 2.2) / PATH_LEN;
 
 export interface FlightFrame {
   progress: number;
@@ -16,159 +43,102 @@ export interface FlightFrame {
   pointer: { x: number; y: number };
 }
 
+interface Twinkler {
+  sprite: THREE.Sprite;
+  base: number;
+  speed: number;
+  phase: number;
+}
+
 /**
- * The WebGL layer: a corridor of HUD brackets, drifting dust, velocity
- * streaks and one wireframe structure per section that the camera flies
- * straight through.
+ * The whole experience lives in this scene: a starfield flown straight
+ * through, with every section's content mounted as textured planes along
+ * the track, dungyov.com-style.
  */
 export class Flight {
   private renderer: THREE.WebGLRenderer;
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private container: HTMLElement;
-  private sectionCount: number;
 
-  private dust!: THREE.Points;
-  private dustMat!: THREE.ShaderMaterial;
-  private streaks!: THREE.LineSegments;
-  private streakMat!: THREE.ShaderMaterial;
-  private gates!: THREE.LineSegments;
-  private stations: THREE.Group[] = [];
+  private raycaster = new THREE.Raycaster();
+  private ndc = new THREE.Vector2();
+  private clickables: THREE.Object3D[] = [];
+  private hovering = false;
+
+  private twinklers: Twinkler[] = [];
+  /** Every section material, faded per-object by its own world z. */
+  private fadeItems: {
+    obj: THREE.Object3D;
+    mat: THREE.Material & { opacity: number };
+    base: number;
+    z: number;
+    tw?: { speed: number; phase: number };
+  }[] = [];
+  private fadeGroups: { group: THREE.Group; z: number }[] = [];
+  private spinners: { obj: THREE.Object3D; speed: number }[] = [];
 
   private pos = new THREE.Vector3();
-  private look = new THREE.Vector3();
-  private prevX = 0;
-  private roll = 0;
+  private ahead = new THREE.Vector3();
   private ro?: ResizeObserver;
   private lastW = 0;
   private lastH = 0;
+  private disposed = false;
 
-  constructor(container: HTMLElement, sectionCount: number) {
+  onCaseClick?: (index: number) => void;
+  onEmailClick?: () => void;
+
+  constructor(container: HTMLElement) {
     this.container = container;
-    this.sectionCount = sectionCount;
 
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      powerPreference: 'high-performance',
-    });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setClearColor(PAPER, 1);
     container.appendChild(this.renderer.domElement);
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(PAPER, 0.0085);
+    this.scene.fog = new THREE.FogExp2(PAPER, 0.006);
 
-    this.camera = new THREE.PerspectiveCamera(64, 1, 0.1, 600);
+    this.camera = new THREE.PerspectiveCamera(60, 1, 0.4, 620);
     pathAt(0, this.pos);
     this.camera.position.copy(this.pos);
 
-    this.buildGates();
-    this.buildDust();
-    this.buildStreaks();
-    this.buildStations();
+    this.buildStars();
+    this.buildOrbs();
+    this.buildSparkles();
+    this.buildNebula();
+    this.buildSections();
+    this.scene.updateMatrixWorld(true);
+    for (const fg of this.fadeGroups) this.registerFades(fg.group);
 
     this.resize();
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(container);
+
+    this.renderer.domElement.addEventListener('click', this.handleClick);
+    window.addEventListener('pointermove', this.trackPointer, { passive: true });
   }
 
-  /* ---------------------------------------------------------- geometry */
+  /* ================================================== environment */
 
-  /** Corner brackets strung along the track — the corridor you fly down. */
-  private buildGates() {
-    const COUNT = 330;
-    const positions: number[] = [];
-    const colors: number[] = [];
-
-    const p = new THREE.Vector3();
-    const next = new THREE.Vector3();
-    const dummy = new THREE.Object3D();
-    const v = new THREE.Vector3();
-    const ink = new THREE.Color(INK);
-
-    for (let i = 0; i < COUNT; i++) {
-      // Overshoots both ends of the track so the corridor still stretches
-      // ahead when the last panel lands, instead of dropping into a void.
-      const t = OVERSHOOT_MIN + (i / (COUNT - 1)) * (OVERSHOOT_MAX - OVERSHOOT_MIN);
-      pathAt(t, p);
-      pathAt(t + 0.004, next);
-
-      dummy.position.copy(p);
-      dummy.lookAt(next);
-      dummy.rotation.z = t * 26 + Math.sin(t * 12) * 0.6;
-      dummy.updateMatrix();
-
-      // Brackets breathe in size, and open up at each station.
-      const nearStation = this.stationProximity(t);
-      const size = 12 + Math.sin(t * 47) * 2.2 + nearStation * 7;
-      const arm = size * (0.2 + Math.sin(t * 31) * 0.05);
-      const bright = 0.14 + nearStation * 0.34 + (i % 8 === 0 ? 0.15 : 0);
-
-      for (const [sx, sy] of [
-        [-1, -1],
-        [1, -1],
-        [1, 1],
-        [-1, 1],
-      ] as const) {
-        const cx = sx * size;
-        const cy = sy * size;
-        const seg: [number, number, number][][] = [
-          [
-            [cx, cy, 0],
-            [cx - sx * arm, cy, 0],
-          ],
-          [
-            [cx, cy, 0],
-            [cx, cy - sy * arm, 0],
-          ],
-        ];
-        for (const [a, b] of seg) {
-          for (const pt of [a, b]) {
-            v.set(pt[0], pt[1], pt[2]).applyMatrix4(dummy.matrix);
-            positions.push(v.x, v.y, v.z);
-            colors.push(ink.r * bright, ink.g * bright, ink.b * bright);
-          }
-        }
-      }
-    }
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-    this.gates = new THREE.LineSegments(
-      geo,
-      new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 })
-    );
-    this.scene.add(this.gates);
-  }
-
-  /** 0..1 — how close `t` sits to the nearest section station. */
-  private stationProximity(t: number) {
-    let best = 1;
-    for (let i = 0; i < this.sectionCount; i++) {
-      best = Math.min(best, Math.abs(t - stationT(i, this.sectionCount)));
-    }
-    return Math.max(0, 1 - best / stationHalfWindow(this.sectionCount));
-  }
-
-  /** Slow-drifting motes filling the tube around the track. */
-  private buildDust() {
-    const COUNT = 8000;
+  private buildStars() {
+    const isSmall = window.innerWidth < 720;
+    const COUNT = isSmall ? 2600 : 5200;
     const position = new Float32Array(COUNT * 3);
     const scale = new Float32Array(COUNT);
     const phase = new Float32Array(COUNT);
     const p = new THREE.Vector3();
 
     for (let i = 0; i < COUNT; i++) {
-      const t = OVERSHOOT_MIN + Math.random() * (OVERSHOOT_MAX - OVERSHOOT_MIN);
-      pathAt(t, p);
+      const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
+      pathAt(Math.min(t, 1), p);
+      p.z = -t * PATH_LEN;
       const a = Math.random() * Math.PI * 2;
-      const r = 4 + Math.pow(Math.random(), 0.6) * 44;
-      position[i * 3] = p.x + Math.cos(a) * r;
-      position[i * 3 + 1] = p.y + Math.sin(a) * r * 0.7;
-      position[i * 3 + 2] = p.z + (Math.random() - 0.5) * 24;
-      scale[i] = 0.5 + Math.random() * 1.5;
+      const r = 3 + Math.pow(Math.random(), 0.55) * 52;
+      position[i * 3] = p.x + Math.cos(a) * r * 1.25;
+      position[i * 3 + 1] = p.y + Math.sin(a) * r * 0.8;
+      position[i * 3 + 2] = p.z + (Math.random() - 0.5) * STATION_GAP;
+      scale[i] = Math.pow(Math.random(), 2.2) * 3 + 0.5;
       phase[i] = Math.random() * Math.PI * 2;
     }
 
@@ -177,13 +147,11 @@ export class Flight {
     geo.setAttribute('aScale', new THREE.BufferAttribute(scale, 1));
     geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
 
-    this.dustMat = new THREE.ShaderMaterial({
+    const mat = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
       uniforms: {
         uTime: { value: 0 },
-        uColor: { value: new THREE.Color(INK) },
         uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
       },
       vertexShader: /* glsl */ `
@@ -194,270 +162,741 @@ export class Flight {
         varying float vAlpha;
 
         void main() {
-          vec3 p = position;
-          p.x += sin(uTime * 0.22 + aPhase) * 0.7;
-          p.y += cos(uTime * 0.18 + aPhase * 1.7) * 0.7;
-
-          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
           float dist = -mv.z;
-          // Capped hard: without this the motes nearest the camera blow up
-          // into bokeh blobs and swallow the scene.
-          gl_PointSize = clamp(
-            aScale * uPixelRatio * (46.0 / max(dist, 6.0)),
-            0.5,
-            3.6 * uPixelRatio
-          );
+          gl_PointSize = clamp(aScale * uPixelRatio * (60.0 / max(dist, 4.0)), 0.6, 26.0);
           gl_Position = projectionMatrix * mv;
 
-          float twinkle = 0.35 + 0.65 * (0.5 + 0.5 * sin(uTime * 1.5 + aPhase * 3.0));
-          float near = smoothstep(8.0, 42.0, dist);
-          float far = 1.0 - smoothstep(180.0, 400.0, dist);
-          vAlpha = twinkle * near * far;
+          float tw = 0.55 + 0.45 * sin(uTime * (0.6 + aPhase * 0.25) + aPhase * 7.0);
+          float near = smoothstep(2.0, 14.0, dist);
+          float far = 1.0 - smoothstep(160.0, 330.0, dist);
+          vAlpha = tw * near * far;
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uColor;
         varying float vAlpha;
-
         void main() {
-          float d = length(gl_PointCoord - 0.5);
-          if (d > 0.5) discard;
-          float a = smoothstep(0.5, 0.1, d) * vAlpha * 0.85;
-          gl_FragColor = vec4(uColor, a);
+          float d = length(gl_PointCoord - 0.5) * 2.0;
+          float core = smoothstep(0.42, 0.0, d);
+          float halo = smoothstep(1.0, 0.2, d) * 0.28;
+          float a = (core + halo) * vAlpha;
+          if (a < 0.004) discard;
+          gl_FragColor = vec4(vec3(1.0), a);
         }
       `,
     });
 
-    this.dust = new THREE.Points(geo, this.dustMat);
-    this.dust.frustumCulled = false;
-    this.scene.add(this.dust);
+    const stars = new THREE.Points(geo, mat);
+    stars.frustumCulled = false;
+    this.scene.add(stars);
+    this.starMat = mat;
+  }
+  private starMat!: THREE.ShaderMaterial;
+
+  /** A handful of big glowing orbs — the "planets" drifting past. */
+  private buildOrbs() {
+    const tex = orbTexture();
+    const p = new THREE.Vector3();
+    const N = 14;
+    for (let i = 0; i < N; i++) {
+      const t = OVER_MIN + ((i + 0.5) / N) * (OVER_MAX - OVER_MIN);
+      pathAt(Math.min(t, 1), p);
+      p.z = -t * PATH_LEN;
+      const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.85,
+      });
+      const s = new THREE.Sprite(mat);
+      const side = i % 2 === 0 ? 1 : -1;
+      s.position.set(
+        p.x + side * (13 + Math.sin(i * 3.7) * 9),
+        p.y + Math.cos(i * 2.9) * 7,
+        p.z - Math.sin(i * 5.1) * STATION_GAP * 0.35
+      );
+      const size = 3.2 + ((i * 37) % 10) * 0.55;
+      s.scale.setScalar(size);
+      this.scene.add(s);
+      this.twinklers.push({ sprite: s, base: 0.85, speed: 0.35 + (i % 5) * 0.1, phase: i * 1.7 });
+    }
   }
 
-  /** Short dashes that stretch into light-streaks the faster you scroll. */
-  private buildStreaks() {
-    const COUNT = 900;
-    const position = new Float32Array(COUNT * 2 * 3);
-    const side = new Float32Array(COUNT * 2);
-    const seed = new Float32Array(COUNT * 2);
+  /** Four-point sparkles that slowly twinkle. */
+  private buildSparkles() {
+    const tex = sparkleTexture();
     const p = new THREE.Vector3();
-
-    for (let i = 0; i < COUNT; i++) {
-      const t = OVERSHOOT_MIN + Math.random() * (OVERSHOOT_MAX - OVERSHOOT_MIN);
-      pathAt(t, p);
-      const a = Math.random() * Math.PI * 2;
-      const r = 6 + Math.pow(Math.random(), 0.7) * 30;
-      const x = p.x + Math.cos(a) * r;
-      const y = p.y + Math.sin(a) * r * 0.75;
-      const z = p.z + (Math.random() - 0.5) * 20;
-      const s = Math.random();
-
-      for (let v = 0; v < 2; v++) {
-        position[(i * 2 + v) * 3] = x;
-        position[(i * 2 + v) * 3 + 1] = y;
-        position[(i * 2 + v) * 3 + 2] = z;
-        side[i * 2 + v] = v;
-        seed[i * 2 + v] = s;
-      }
+    const N = 26;
+    for (let i = 0; i < N; i++) {
+      const t = OVER_MIN + Math.random() * (OVER_MAX - OVER_MIN);
+      pathAt(Math.min(t, 1), p);
+      p.z = -t * PATH_LEN;
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+      const s = new THREE.Sprite(mat);
+      s.position.set(
+        p.x + (Math.random() - 0.5) * 34,
+        p.y + (Math.random() - 0.5) * 22,
+        p.z + (Math.random() - 0.5) * STATION_GAP
+      );
+      s.scale.setScalar(0.55 + Math.random() * 0.9);
+      this.scene.add(s);
+      this.twinklers.push({
+        sprite: s,
+        base: 0.75,
+        speed: 0.5 + Math.random() * 0.8,
+        phase: Math.random() * Math.PI * 2,
+      });
     }
+  }
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(position, 3));
-    geo.setAttribute('aSide', new THREE.BufferAttribute(side, 1));
-    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  /** Fog banks and pillars around the finale. */
+  private buildNebula() {
+    const p = new THREE.Vector3();
+    for (let i = 0; i < 26; i++) {
+      const t = 0.84 + Math.random() * (OVER_MAX - 0.84);
+      pathAt(Math.min(t, 1), p);
+      p.z = -t * PATH_LEN;
+      const tex = cloudTexture(256, 7 + i * 13);
+      const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.6,
+      });
+      const s = new THREE.Sprite(mat);
+      const pillar = i % 4 === 0;
+      const w = pillar ? 14 + Math.random() * 10 : 34 + Math.random() * 30;
+      const h = pillar ? 26 + Math.random() * 16 : 12 + Math.random() * 9;
+      s.position.set(
+        p.x + (Math.random() - 0.5) * 46,
+        p.y - 8 - Math.random() * 8 + (pillar ? 6 : 0),
+        p.z + (Math.random() - 0.5) * STATION_GAP * 0.8
+      );
+      s.scale.set(w, h, 1);
+      this.scene.add(s);
+      this.twinklers.push({
+        sprite: s,
+        base: 0.28 + Math.random() * 0.2,
+        speed: 0.1 + Math.random() * 0.12,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
 
-    this.streakMat = new THREE.ShaderMaterial({
+  /* ================================================== content helpers */
+
+  private plane(built: BuiltTexture, opts: { opacity?: number } = {}): THREE.Mesh {
+    const mat = new THREE.MeshBasicMaterial({
+      map: built.texture,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: {
-        uStretch: { value: 0 },
-        uColor: { value: new THREE.Color(INK) },
-      },
-      vertexShader: /* glsl */ `
-        attribute float aSide;
-        attribute float aSeed;
-        uniform float uStretch;
-        varying float vAlpha;
+      opacity: opts.opacity ?? 1,
+      fog: false,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(built.w, built.h), mat);
+    mesh.userData.w = built.w;
+    mesh.userData.h = built.h;
+    return mesh;
+  }
 
-        void main() {
-          vec3 p = position;
-          p.z += aSide * (0.6 + uStretch * (14.0 + aSeed * 26.0));
+  /** Mount a group at section `i`'s anchor, registered for distance fading. */
+  private mount(i: number, group: THREE.Group) {
+    const anchor = new THREE.Vector3();
+    stationAnchor(i, anchor);
+    group.position.copy(anchor);
+    this.scene.add(group);
+    this.fadeGroups.push({ group, z: anchor.z });
+  }
 
-          vec4 mv = modelViewMatrix * vec4(p, 1.0);
-          float dist = -mv.z;
-          gl_Position = projectionMatrix * mv;
+  /**
+   * Register every material under `root` for per-object distance fading.
+   * Each element appears as the camera closes on *its own* depth and is cut
+   * just before the camera crosses it, so deep-staggered children (cards,
+   * the manifesto answer) behave independently of their group anchor.
+   */
+  private registerFades(root: THREE.Object3D) {
+    const wp = new THREE.Vector3();
+    root.updateWorldMatrix(true, true);
+    root.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      const mat = mesh.material as (THREE.Material & { opacity: number }) | undefined;
+      if (!mat || Array.isArray(mat) || !('opacity' in mat)) return;
+      child.getWorldPosition(wp);
+      this.fadeItems.push({
+        obj: child,
+        mat,
+        base: mat.opacity,
+        z: wp.z,
+        tw: child.userData.twinkle,
+      });
+    });
+  }
 
-          float near = smoothstep(3.0, 22.0, dist);
-          float far = 1.0 - smoothstep(90.0, 240.0, dist);
-          vAlpha = near * far * uStretch * (0.35 + aSeed * 0.65);
-        }
-      `,
-      fragmentShader: /* glsl */ `
-        uniform vec3 uColor;
-        varying float vAlpha;
-        void main() {
-          gl_FragColor = vec4(uColor, vAlpha * 0.55);
-        }
-      `,
+  private buildSections() {
+    this.buildIntro(0);
+    this.buildPitch(1);
+    this.buildHall(2);
+    this.buildStory(3);
+    this.buildNumbers(4);
+    this.buildCases(5);
+    this.buildCredentials(6);
+    this.buildManifesto(7);
+    this.buildTalk(8);
+  }
+
+  /** 01 — name block left, framed photo right. */
+  private buildIntro(i: number) {
+    const g = new THREE.Group();
+    const leftX = -13.4;
+    const put = (mesh: THREE.Mesh, y: number, indent = 0) => {
+      mesh.position.set(leftX + indent + (mesh.userData.w as number) / 2, y, 0);
+      g.add(mesh);
+    };
+
+    put(
+      this.plane(
+        textTexture({ text: INTRO.first, font: DISPLAY, size: 3.05, weight: 900, outline: true, outlineWidth: 0.028 })
+      ),
+      3.5
+    );
+    put(this.plane(textTexture({ text: INTRO.last, font: DISPLAY, size: 3.15, weight: 900 })), 0.7);
+    put(
+      this.plane(
+        textTexture({ text: INTRO.paren, font: BODY, size: 0.95, weight: 500, color: INK_DIM, letterSpacing: 0.3 })
+      ),
+      -1.7,
+      0.15
+    );
+
+    INTRO.roles.forEach((r, k) => {
+      put(
+        this.plane(
+          textTexture({ text: `✦   ${r}`, font: BODY, size: 0.82, weight: 300, color: 'rgba(244,242,240,0.85)' })
+        ),
+        -3.5 - k * 1.32,
+        1.1
+      );
     });
 
-    this.streaks = new THREE.LineSegments(geo, this.streakMat);
-    this.streaks.frustumCulled = false;
-    this.scene.add(this.streaks);
+    // Photo, grayscaled through canvas, inside a slightly offset thin frame.
+    const img = new Image();
+    img.onload = () => {
+      if (this.disposed) return;
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ctx = c.getContext('2d')!;
+      ctx.filter = 'grayscale(1) contrast(1.04)';
+      ctx.drawImage(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+
+      const aspect = img.naturalWidth / img.naturalHeight || 1;
+      const ph = 8.2;
+      const pw = Math.min(ph * aspect, 8.6);
+      const photo = new THREE.Mesh(
+        new THREE.PlaneGeometry(pw, ph),
+        new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, fog: false })
+      );
+      photo.position.set(10.6, 0.5, 0);
+      g.add(photo);
+
+      const fw = pw / 2 + 0.4;
+      const fh = ph / 2 + 0.4;
+      const frameGeo = new THREE.BufferGeometry();
+      frameGeo.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(
+          [-fw, -fh, 0, fw, -fh, 0, fw, -fh, 0, fw, fh, 0, fw, fh, 0, -fw, fh, 0, -fw, fh, 0, -fw, -fh, 0],
+          3
+        )
+      );
+      const frame = new THREE.LineSegments(
+        frameGeo,
+        new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.7, fog: false })
+      );
+      frame.position.set(10.75, 0.65, 0.01);
+      g.add(frame);
+
+      // Late additions register themselves for fading.
+      this.scene.updateMatrixWorld(true);
+      this.registerFades(photo);
+      this.registerFades(frame);
+    };
+    img.src = PROFILE.photo;
+
+    this.mount(i, g);
   }
 
-  /** One wireframe structure per section, sitting on the track. */
-  private buildStations() {
-    const geos: THREE.BufferGeometry[] = [
-      new THREE.IcosahedronGeometry(19, 1),
-      new THREE.TorusGeometry(20, 5.5, 8, 26),
-      new THREE.OctahedronGeometry(21, 1),
-      new THREE.TorusKnotGeometry(15, 3.2, 90, 8),
-      new THREE.DodecahedronGeometry(20, 0),
-      new THREE.BoxGeometry(28, 28, 28, 2, 2, 2),
-      new THREE.CylinderGeometry(19, 19, 34, 14, 2, true),
-      new THREE.SphereGeometry(20, 16, 10),
-    ];
+  /** 02 — elevator pitch, centred, flanked by sparkles. */
+  private buildPitch(i: number) {
+    const g = new THREE.Group();
 
-    const p = new THREE.Vector3();
-    const ahead = new THREE.Vector3();
-    const tangent = new THREE.Vector3();
-    const right = new THREE.Vector3();
-    const UP = new THREE.Vector3(0, 1, 0);
+    const eyebrow = this.plane(
+      textTexture({ text: PITCH.eyebrow, font: BODY, size: 0.68, weight: 400, color: INK_FAINT, letterSpacing: 0.42 })
+    );
+    eyebrow.position.set(0, 5.3, 0);
+    g.add(eyebrow);
 
-    // One per gap between sections, plus a trailing one past the finish so
-    // there is still something ahead when the last panel lands.
-    for (let i = 0; i < this.sectionCount; i++) {
-      const t = structureT(i, this.sectionCount);
-      pathAt(t, p);
-      pathAt(t + 0.004, ahead);
-      tangent.subVectors(ahead, p).normalize();
-      right.crossVectors(tangent, UP).normalize();
+    const body = this.plane(
+      textTexture({
+        text: PITCH.lines,
+        font: BODY,
+        size: 1.68,
+        weight: 300,
+        color: 'rgba(244,242,240,0.92)',
+        align: 'center',
+        lineHeight: 1.32,
+      })
+    );
+    body.position.set(0, 0.1, 0);
+    g.add(body);
 
-      // Pushed off the track, alternating sides, so the camera flies past
-      // rather than through. Keeps the middle of frame clear for the text.
-      const side = i % 2 === 0 ? 1 : -1;
-      const lateral = 52 + (i % 3) * 7;
-      const lift = ((i % 4) - 1.5) * 11;
-
-      const group = new THREE.Group();
-      group.position.copy(p).addScaledVector(right, side * lateral).addScaledVector(UP, lift);
-
-      const src = geos[i % geos.length];
-      const core = new THREE.LineSegments(
-        new THREE.WireframeGeometry(src),
-        new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0 })
+    const spark = sparkleTexture();
+    for (const sx of [-14.5, 14.5]) {
+      const s = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: spark, transparent: true, depthWrite: false, opacity: 0.85 })
       );
-      core.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-      group.add(core);
-
-      // Outer reticle: a clean ring with ticks stepping outward from it.
-      const ticks: number[] = [];
-      const R = 22;
-
-      const SEGS = 160;
-      for (let k = 0; k < SEGS; k++) {
-        const a0 = (k / SEGS) * Math.PI * 2;
-        const a1 = ((k + 1) / SEGS) * Math.PI * 2;
-        ticks.push(Math.cos(a0) * R, Math.sin(a0) * R, 0);
-        ticks.push(Math.cos(a1) * R, Math.sin(a1) * R, 0);
-      }
-
-      const TICKS = 48;
-      for (let k = 0; k < TICKS; k++) {
-        const a = (k / TICKS) * Math.PI * 2;
-        const r1 = R + (k % 6 === 0 ? 4.2 : 1.8);
-        ticks.push(Math.cos(a) * R, Math.sin(a) * R, 0);
-        ticks.push(Math.cos(a) * r1, Math.sin(a) * r1, 0);
-      }
-
-      const tickGeo = new THREE.BufferGeometry();
-      tickGeo.setAttribute('position', new THREE.Float32BufferAttribute(ticks, 3));
-      const reticle = new THREE.LineSegments(
-        tickGeo,
-        new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0 })
-      );
-      group.add(reticle);
-
-      group.userData = { core, reticle, t };
-      this.stations.push(group);
-      this.scene.add(group);
+      s.position.set(sx, 0.3, -2);
+      s.scale.setScalar(1.1);
+      s.userData.twinkle = { speed: 0.7, phase: sx };
+      g.add(s);
     }
 
-    geos.forEach((g) => g.dispose());
+    this.mount(i, g);
   }
 
-  /* ------------------------------------------------------------ runtime */
+  /** 03 — wordmark cloud at scattered depths. */
+  private buildHall(i: number) {
+    const g = new THREE.Group();
+    const seats: [number, number, number][] = [
+      [-8.2, 0.9, 0],
+      [7.8, 1.4, -4],
+      [-0.6, -2.4, -8],
+      [-10.4, -3.6, -14],
+      [5.2, -4.2, -12],
+      [2.2, -0.2, -18],
+      [-5.4, 3.8, -22],
+      [9.6, 3.4, -26],
+      [-1.8, 1.8, -30],
+    ];
+    HALL.forEach((h, k) => {
+      const seat = seats[k % seats.length];
+      const depth = -seat[2] / 30;
+      const alpha = 0.68 - depth * 0.26;
+      const word = this.plane(
+        textTexture({
+          text: h.name,
+          font: BODY,
+          size: 2.1 * h.scale,
+          weight: 500,
+          color: `rgba(244,242,240,${alpha.toFixed(2)})`,
+        })
+      );
+      word.position.set(seat[0], seat[1], seat[2]);
+      g.add(word);
+    });
+    this.mount(i, g);
+  }
+
+  /** 04 — about-me bullets with rule and meta, plus a nearby orb. */
+  private buildStory(i: number) {
+    const g = new THREE.Group();
+
+    const leftX = -5.6;
+
+    const title = this.plane(
+      textTexture({ text: STORY.title, font: BODY, size: 1.5, weight: 400, color: 'rgba(244,242,240,0.9)' })
+    );
+    const titleW = title.userData.w as number;
+    title.position.set(leftX + titleW / 2, 3.1, 0);
+    g.add(title);
+
+    const rule = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.5, 0.02),
+      new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.22, depthWrite: false, fog: false })
+    );
+    rule.position.set(leftX + titleW + 3.9, 2.85, 0);
+    g.add(rule);
+
+    STORY.bullets.forEach((b, k) => {
+      const row = this.plane(
+        textTexture({ text: `·   ${b}`, font: BODY, size: 0.78, weight: 300, color: 'rgba(244,242,240,0.7)' })
+      );
+      row.position.set(leftX + 0.2 + (row.userData.w as number) / 2, 1.5 - k * 1.06, 0);
+      g.add(row);
+    });
+
+    const meta = this.plane(
+      textTexture({ text: STORY.meta, font: BODY, size: 0.62, weight: 400, color: INK_FAINT, letterSpacing: 0.18 })
+    );
+    meta.position.set(leftX + 0.2 + (meta.userData.w as number) / 2, -4.7, 0);
+    g.add(meta);
+
+    const orb = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: orbTexture(), transparent: true, depthWrite: false, opacity: 0.9 })
+    );
+    orb.position.set(12.4, -4.6, -6);
+    orb.scale.setScalar(5);
+    orb.userData.twinkle = { speed: 0.3, phase: 2.2 };
+    g.add(orb);
+
+    this.mount(i, g);
+  }
+
+  /** 05 — giant outlined numerals with small captions, spread in depth. */
+  private buildNumbers(i: number) {
+    const g = new THREE.Group();
+
+    const items = NUMBERS.filter((n) => !n.giant);
+    const seats: [number, number, number][] = [
+      [-8.6, 1.6, 0],
+      [4.8, 2.4, -10],
+      [-6.2, -3.4, -20],
+      [7.2, -2.6, -30],
+    ];
+
+    items.forEach((item, k) => {
+      const seat = seats[k % seats.length];
+      const num = this.plane(
+        textTexture({
+          text: item.n,
+          font: DISPLAY,
+          size: 3.4 - k * 0.3,
+          weight: 900,
+          outline: true,
+          outlineWidth: 0.026,
+          color: 'rgba(244,242,240,0.85)',
+        })
+      );
+      num.position.set(seat[0], seat[1], seat[2]);
+      g.add(num);
+
+      const cap = this.plane(
+        textTexture({ text: item.caption, font: BODY, size: 0.72, weight: 300, color: INK_DIM })
+      );
+      const numW = num.userData.w as number;
+      const capW = cap.userData.w as number;
+      cap.position.set(seat[0] + numW / 2 + capW / 2 + 0.7, seat[1] - 1.1, seat[2]);
+      g.add(cap);
+    });
+
+    // The giant one looms past the right edge as you fly through.
+    const giant = NUMBERS.find((n) => n.giant);
+    if (giant) {
+      const num = this.plane(
+        textTexture({
+          text: giant.n.replace('+', ''),
+          font: DISPLAY,
+          size: 22,
+          weight: 900,
+          outline: true,
+          outlineWidth: 0.02,
+          color: 'rgba(244,242,240,0.8)',
+        })
+      );
+      num.position.set(21, -1, -13);
+      g.add(num);
+      const cap = this.plane(
+        textTexture({ text: giant.caption, font: BODY, size: 0.72, weight: 300, color: INK_DIM })
+      );
+      cap.position.set(12.5, -6.5, -12.9);
+      g.add(cap);
+    }
+
+    this.mount(i, g);
+  }
+
+  /** 06 — experience as a click-to-expand case list. */
+  private buildCases(i: number) {
+    const g = new THREE.Group();
+
+    const title = this.plane(
+      textTexture({ text: CASES_HEAD.title, font: BODY, size: 1.6, weight: 400, color: 'rgba(244,242,240,0.92)' })
+    );
+    title.position.set(0, 4.6, 0);
+    g.add(title);
+
+    const hint = this.plane(
+      textTexture({ text: CASES_HEAD.hint, font: BODY, size: 0.56, weight: 400, color: INK_FAINT, letterSpacing: 0.4 })
+    );
+    hint.position.set(0, 3.5, 0);
+    g.add(hint);
+
+    CASES.forEach((c, k) => {
+      const y = 1.7 - k * 2.15;
+
+      const num = this.plane(
+        textTexture({
+          text: `${k + 1}.`,
+          font: DISPLAY,
+          size: 1.35,
+          weight: 900,
+          outline: true,
+          outlineWidth: 0.035,
+          color: 'rgba(244,242,240,0.75)',
+        })
+      );
+      num.position.set(-8.6, y, 0);
+      g.add(num);
+
+      const label = this.plane(
+        textTexture({ text: c.title, font: BODY, size: 1.15, weight: 300, color: 'rgba(244,242,240,0.88)' })
+      );
+      const lw = label.userData.w as number;
+      label.position.set(-6.6 + lw / 2, y, 0);
+      label.userData.caseIndex = k;
+      // A generous invisible hit-area behind the text keeps clicking easy.
+      const hit = new THREE.Mesh(
+        new THREE.PlaneGeometry(lw + 2.5, 1.9),
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+      );
+      hit.position.copy(label.position);
+      hit.position.z -= 0.01;
+      hit.userData.caseIndex = k;
+      g.add(label, hit);
+      this.clickables.push(hit);
+    });
+
+    this.mount(i, g);
+  }
+
+  /** 07 — credential cards floating like the talks. */
+  private buildCredentials(i: number) {
+    const g = new THREE.Group();
+    const star = lineStarTexture();
+
+    CREDENTIALS.forEach((c, k) => {
+      const card = new THREE.Group();
+      const w = 10.5;
+      const h = 5.9;
+
+      const bg = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ color: 0x0b0a0a, transparent: true, opacity: 0.92, depthWrite: false, fog: false })
+      );
+      card.add(bg);
+
+      const border = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.PlaneGeometry(w, h)),
+        new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.3, fog: false })
+      );
+      border.position.z = 0.01;
+      card.add(border);
+
+      const deco = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: star, transparent: true, opacity: 0.5, depthWrite: false })
+      );
+      deco.position.set(w / 2 - 1.6, 0.4, 0.02);
+      deco.scale.setScalar(3);
+      card.add(deco);
+
+      const code = this.plane(
+        textTexture({ text: c.code, font: DISPLAY, size: 1.7, weight: 900, color: 'rgba(240,238,232,0.95)' })
+      );
+      const cw = code.userData.w as number;
+      code.position.set(-w / 2 + 0.9 + cw / 2, -0.6, 0.02);
+      card.add(code);
+
+      const eyebrow = this.plane(
+        textTexture({ text: c.meta, font: BODY, size: 0.42, weight: 400, color: INK_FAINT, letterSpacing: 0.3 })
+      );
+      const ew = eyebrow.userData.w as number;
+      eyebrow.position.set(-w / 2 + 0.9 + ew / 2, 0.7, 0.02);
+      card.add(eyebrow);
+
+      const caption = this.plane(
+        textTexture({ text: c.title, font: BODY, size: 0.66, weight: 300, color: 'rgba(244,242,240,0.8)' })
+      );
+      const capw = caption.userData.w as number;
+      caption.position.set(-w / 2 + capw / 2, -h / 2 - 0.85, 0.02);
+      card.add(caption);
+
+      const side = k % 2 === 0 ? -1 : 1;
+      card.position.set(side * (3.4 + (k % 3) * 1.2), (k % 3) * 1.8 - 1.6, -k * 12);
+      card.rotation.y = side * -0.06;
+      g.add(card);
+    });
+
+    this.mount(i, g);
+  }
+
+  /** 08 — question deep in space, answer by the nebula. */
+  private buildManifesto(i: number) {
+    const g = new THREE.Group();
+
+    const q = this.plane(
+      textTexture({
+        text: MANIFESTO.question,
+        font: BODY,
+        size: 1.6,
+        weight: 300,
+        color: 'rgba(244,242,240,0.9)',
+        align: 'center',
+        lineHeight: 1.35,
+      })
+    );
+    q.position.set(0, 0.6, 0);
+    g.add(q);
+
+    const spark = sparkleTexture();
+    for (const sx of [-16, 16]) {
+      const s = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: spark, transparent: true, depthWrite: false, opacity: 0.9 })
+      );
+      s.position.set(sx, 0.2, -1);
+      s.scale.setScalar(1.35);
+      s.userData.twinkle = { speed: 0.6, phase: sx * 0.3 };
+      g.add(s);
+    }
+
+    const a = this.plane(
+      textTexture({
+        text: MANIFESTO.answer,
+        font: BODY,
+        size: 1.45,
+        weight: 300,
+        color: 'rgba(244,242,240,0.88)',
+        align: 'center',
+        lineHeight: 1.35,
+      })
+    );
+    a.position.set(0.4, -0.4, -STATION_GAP * 0.52);
+    g.add(a);
+
+    this.mount(i, g);
+  }
+
+  /** 09 — the LET'S TALK finale with watermark mark and email. */
+  private buildTalk(i: number) {
+    const g = new THREE.Group();
+
+    const mark = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: markTexture(512, 0.28), transparent: true, depthWrite: false, opacity: 0.9 })
+    );
+    mark.position.set(0, 0.6, -3);
+    mark.scale.setScalar(13);
+    g.add(mark);
+
+    const title = this.plane(
+      textTexture({ text: TALK.title, font: DISPLAY, size: 3.9, weight: 900, color: 'rgba(244,242,240,0.97)' })
+    );
+    title.position.set(0, 1.6, 0);
+    g.add(title);
+
+    const email = this.plane(
+      textTexture({ text: TALK.email, font: BODY, size: 1.05, weight: 300, color: 'rgba(244,242,240,0.6)' })
+    );
+    email.position.set(0, -1.5, 0);
+    g.add(email);
+    const ew = email.userData.w as number;
+    const rule = new THREE.Mesh(
+      new THREE.PlaneGeometry(ew + 1.6, 0.02),
+      new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.3, depthWrite: false, fog: false })
+    );
+    rule.position.set(0, -2.15, 0);
+    g.add(rule);
+    const hit = new THREE.Mesh(
+      new THREE.PlaneGeometry(ew + 2, 1.8),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+    );
+    hit.position.copy(email.position);
+    hit.userData.email = true;
+    g.add(hit);
+    this.clickables.push(hit);
+
+    const meta = this.plane(
+      textTexture({ text: TALK.meta, font: BODY, size: 0.58, weight: 400, color: INK_FAINT, letterSpacing: 0.4 })
+    );
+    meta.position.set(0, -3.6, 0);
+    g.add(meta);
+
+    const name = this.plane(
+      textTexture({ text: TALK.name, font: DISPLAY, size: 1.25, weight: 700, color: 'rgba(244,242,240,0.65)', letterSpacing: 0.06 })
+    );
+    name.position.set(0, -4.75, 0);
+    g.add(name);
+
+    this.mount(i, g);
+  }
+
+  /* ================================================== interaction */
+
+  private trackPointer = (e: PointerEvent) => {
+    this.ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+    this.raycaster.setFromCamera(this.ndc, this.camera);
+    const hits = this.raycaster.intersectObjects(this.clickables, false);
+    const hovering = hits.length > 0 && this.groupOpacityAt(hits[0].object) > 0.35;
+    if (hovering !== this.hovering) {
+      this.hovering = hovering;
+      this.renderer.domElement.style.cursor = hovering ? 'pointer' : '';
+    }
+  };
+
+  private handleClick = () => {
+    if (!this.hovering) return;
+    this.raycaster.setFromCamera(this.ndc, this.camera);
+    const hits = this.raycaster.intersectObjects(this.clickables, false);
+    if (!hits.length) return;
+    const data = hits[0].object.userData;
+    if (typeof data.caseIndex === 'number') this.onCaseClick?.(data.caseIndex);
+    else if (data.email) this.onEmailClick?.();
+  };
+
+  /** Opacity of the fade-group an object belongs to (0 when far away). */
+  private groupOpacityAt(obj: THREE.Object3D): number {
+    let p: THREE.Object3D | null = obj;
+    while (p) {
+      const found = this.fadeGroups.find((f) => f.group === p);
+      if (found) {
+        const dz = this.camera.position.z - found.z;
+        const appear = 1 - Math.min(1, Math.max(0, (dz - READ_DIST) / (STATION_GAP * 0.8)));
+        const vanish = Math.min(1, Math.max(0, (dz - 1.5) / 5));
+        return appear * vanish;
+      }
+      p = p.parent;
+    }
+    return 1;
+  }
+
+  /* ================================================== frame loop */
 
   update(f: FlightFrame) {
-    const { progress, velocity, time, dt, pointer } = f;
+    const { progress, time, dt, pointer } = f;
 
-    // The stylesheet can land after mount, and ResizeObserver is throttled
-    // with the rest of the pipeline while the tab is hidden. Reconcile here
-    // so the drawing buffer can never be left stale.
-    if (
-      this.container.clientWidth !== this.lastW ||
-      this.container.clientHeight !== this.lastH
-    ) {
+    if (this.container.clientWidth !== this.lastW || this.container.clientHeight !== this.lastH) {
       this.resize();
     }
 
-    // Camera rides the track, aimed a little further down it.
     pathAt(progress, this.pos);
-    pathAt(Math.min(progress + 0.008, 1.0001), this.look);
+    pathAt(Math.min(progress + 0.01, 1.02), this.ahead);
 
-    const drift = 0.55;
-    this.camera.position.set(
-      this.pos.x + pointer.x * drift,
-      this.pos.y - pointer.y * drift,
-      this.pos.z
-    );
-    this.camera.lookAt(
-      this.look.x + pointer.x * 2.4,
-      this.look.y - pointer.y * 2.4,
-      this.look.z
-    );
+    this.camera.position.set(this.pos.x + pointer.x * 0.9, this.pos.y - pointer.y * 0.7, this.pos.z);
+    this.camera.lookAt(this.ahead.x + pointer.x * 2.2, this.ahead.y - pointer.y * 1.8, this.ahead.z);
 
-    // Bank into the turns.
-    const dx = this.pos.x - this.prevX;
-    this.prevX = this.pos.x;
-    const targetRoll = THREE.MathUtils.clamp(-dx * 0.55, -0.32, 0.32);
-    this.roll += (targetRoll - this.roll) * Math.min(1, dt * 3);
-    this.camera.rotateZ(this.roll + Math.sin(time * 0.35) * 0.012);
+    this.starMat.uniforms.uTime.value = time;
 
-    const speed = Math.min(1, Math.abs(velocity) * 190);
-    this.camera.fov = 64 + speed * 11;
-    this.camera.updateProjectionMatrix();
+    const camZ = this.camera.position.z;
 
-    this.dustMat.uniforms.uTime.value = time;
-    this.streakMat.uniforms.uStretch.value = speed;
+    // Environment sprites twinkle, and cut out as the camera crosses them
+    // so nothing smears across the lens.
+    for (const t of this.twinklers) {
+      const dz = camZ - t.sprite.position.z;
+      const vanish = Math.min(1, Math.max(0, (dz - 1) / 6));
+      t.sprite.material.opacity =
+        t.base * (0.6 + 0.4 * Math.sin(time * t.speed + t.phase)) * vanish;
+    }
+    for (const s of this.spinners) s.obj.rotation.z += s.speed * dt;
 
-    // The scene breathes with the reading rhythm: it settles down while a
-    // panel is on screen so the type stays legible, and opens back up in the
-    // gaps between sections where the flight is the only thing to look at.
-    const calm = this.stationProximity(progress);
-    const energy = 1 - calm * 0.62;
-    (this.gates.material as THREE.LineBasicMaterial).opacity = 0.25 + 0.65 * energy;
-
-    // Stations spin, and fade in as the camera closes on them.
-    for (const g of this.stations) {
-      const { core, reticle } = g.userData as {
-        core: THREE.LineSegments;
-        reticle: THREE.LineSegments;
-      };
-      core.rotation.x += dt * 0.06;
-      core.rotation.y += dt * 0.085;
-      reticle.rotation.z += dt * 0.12;
-
-      const dist = this.camera.position.distanceTo(g.position);
-      // Brightest on approach, thinned out while passing through so it never
-      // fights the text sitting on top of it.
-      const approach = 1 - THREE.MathUtils.smoothstep(dist, 70, 340);
-      const inside = THREE.MathUtils.smoothstep(dist, 6, 60);
-      const vis = approach * (0.22 + 0.78 * inside) * energy;
-      (core.material as THREE.LineBasicMaterial).opacity = vis * 0.42;
-      (reticle.material as THREE.LineBasicMaterial).opacity = vis * 0.62;
-      reticle.lookAt(this.camera.position);
+    // Section content: each element materialises as the camera closes on its
+    // own depth — readable at READ_DIST — and is cut just before impact.
+    for (const it of this.fadeItems) {
+      const dz = camZ - it.z;
+      const appear = 1 - Math.min(1, Math.max(0, (dz - READ_DIST) / (STATION_GAP * 0.8)));
+      const vanish = Math.min(1, Math.max(0, (dz - 1.5) / 5));
+      let o = appear * vanish * it.base;
+      if (it.tw) o *= 0.6 + 0.4 * Math.sin(time * it.tw.speed + it.tw.phase);
+      it.mat.opacity = o;
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -470,22 +909,52 @@ export class Flight {
     this.lastW = this.container.clientWidth;
     this.lastH = this.container.clientHeight;
     this.renderer.setSize(w, h, false);
-    this.camera.aspect = w / h;
+    const aspect = w / h;
+    this.camera.aspect = aspect;
+
+    // Landscape keeps the reference 60-degree vertical fov. Portrait holds
+    // the horizontal fov steady instead (capped against fisheye) and shrinks
+    // the content a step, so wide compositions still fit a phone.
+    const halfH = (46 * Math.PI) / 180;
+    this.camera.fov =
+      aspect >= 1.15
+        ? 60
+        : Math.min(92, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(halfH) / aspect)));
     this.camera.updateProjectionMatrix();
+
+    const scale = aspect < 0.9 ? 0.85 : 1;
+    let changed = false;
+    for (const fg of this.fadeGroups) {
+      if (fg.group.scale.x !== scale) {
+        fg.group.scale.setScalar(scale);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.scene.updateMatrixWorld(true);
+      const wp = new THREE.Vector3();
+      for (const it of this.fadeItems) it.z = it.obj.getWorldPosition(wp).z;
+    }
   }
 
   dispose() {
+    this.disposed = true;
     this.ro?.disconnect();
+    this.renderer.domElement.removeEventListener('click', this.handleClick);
+    window.removeEventListener('pointermove', this.trackPointer);
     this.scene.traverse((o) => {
       const any = o as THREE.Mesh;
       any.geometry?.dispose?.();
-      const m = any.material as THREE.Material | THREE.Material[] | undefined;
+      const m = any.material as (THREE.Material & { map?: THREE.Texture }) | THREE.Material[] | undefined;
       if (Array.isArray(m)) m.forEach((x) => x.dispose());
-      else m?.dispose?.();
+      else if (m) {
+        m.map?.dispose?.();
+        m.dispose();
+      }
     });
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
 }
 
-export { PATH_LEN, START_Z };
+export { SECTION_COUNT, stationT };

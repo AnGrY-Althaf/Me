@@ -9,43 +9,37 @@ interface Props {
   onOpenTerminal: () => void;
 }
 
+/** Fixed HUD: brand, status, progress rail, section nav, scroll hint. */
 const Overlay: React.FC<Props> = ({ subscribe, active, onJump, onOpenTerminal }) => {
   const fill = useRef<HTMLDivElement>(null);
-  const readout = useRef<HTMLDivElement>(null);
   const hint = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    let lastPct = -1;
-    return subscribe((f) => {
-      const p = Math.max(0, Math.min(1, f.progress));
-      if (fill.current) fill.current.style.height = `${p * 100}%`;
-
-      const pct = Math.round(p * 100);
-      if (pct !== lastPct) {
-        lastPct = pct;
-        if (readout.current) readout.current.textContent = `${String(pct).padStart(3, '0')}`;
-      }
-      if (hint.current) hint.current.classList.toggle('hidden', p > 0.015);
-    });
-  }, [subscribe]);
+  useEffect(
+    () =>
+      subscribe((f) => {
+        const p = Math.max(0, Math.min(1, f.progress));
+        if (fill.current) fill.current.style.height = `${p * 100}%`;
+        if (hint.current) hint.current.classList.toggle('hidden', f.raw > 0.02);
+      }),
+    [subscribe]
+  );
 
   return (
     <div className="overlay">
       <div className="header">
         <div className="brand">
-          <span className="mark" aria-hidden="true" />
-          {PROFILE.name}
-          <span className="alias">/ {PROFILE.alias}</span>
+          <svg className="mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="3" y="3" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" />
+            <ellipse cx="16" cy="16" rx="7.5" ry="10" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          </svg>
+          {PROFILE.brand}
         </div>
         <div className="status">{PROFILE.status}</div>
       </div>
 
       <div className="progress-track" aria-hidden="true">
         <div className="progress-fill" ref={fill} />
-      </div>
-      <div className="progress-readout" ref={readout} aria-hidden="true">
-        000
       </div>
 
       <nav className="section-nav" aria-label="Sections">
@@ -55,7 +49,7 @@ const Overlay: React.FC<Props> = ({ subscribe, active, onJump, onOpenTerminal })
               <button
                 key={s.id}
                 className={i === active ? 'active' : undefined}
-                style={{ animationDelay: `${i * 32}ms` }}
+                style={{ animationDelay: `${i * 28}ms` }}
                 onClick={() => {
                   onJump(i);
                   setOpen(false);
@@ -67,11 +61,7 @@ const Overlay: React.FC<Props> = ({ subscribe, active, onJump, onOpenTerminal })
             ))}
           </div>
         )}
-        <button
-          className="section-label"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-        >
+        <button className="section-label" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
           section
           <b>{SECTIONS[active]?.label}</b>
           <span className={`chev${open ? ' open' : ''}`} aria-hidden="true" />
@@ -84,8 +74,7 @@ const Overlay: React.FC<Props> = ({ subscribe, active, onJump, onOpenTerminal })
       </div>
 
       <button className="terminal-launch" onClick={onOpenTerminal}>
-        <span className="dot" aria-hidden="true" />
-        <span>terminal</span>
+        terminal
       </button>
     </div>
   );

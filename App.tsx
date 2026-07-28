@@ -1,28 +1,39 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Canvas from './components/Canvas';
+import CaseOverlay from './components/CaseOverlay';
 import Loader from './components/Loader';
 import Overlay from './components/Overlay';
-import Panels from './components/Panels';
 import TerminalChat from './components/TerminalChat';
-import { PROFILE, SECTIONS } from './content';
+import { PROFILE, SECTIONS, TALK } from './content';
 import { useFlightScroll } from './hooks/useFlightScroll';
 
 const App: React.FC = () => {
   const [terminalOpen, setTerminalOpen] = useState(false);
+  const [caseIndex, setCaseIndex] = useState<number | null>(null);
   const [painted, setPainted] = useState(false);
   const [fontsIn, setFontsIn] = useState(false);
 
+  const modalOpen = terminalOpen || caseIndex !== null;
+
   const { scrollerRef, spacerHeight, subscribe, active, scrollToSection } = useFlightScroll({
     sectionCount: SECTIONS.length,
-    enabled: !terminalOpen,
+    enabled: !modalOpen,
   });
 
+  // The scene rasterises text to canvas textures, so fonts must be loaded
+  // before the flight builds — Canvas mounts only once this flips true.
   useEffect(() => {
     let cancelled = false;
     const done = () => !cancelled && setFontsIn(true);
-    if (document.fonts?.ready) document.fonts.ready.then(done, done);
-    else done();
-    // Never let a slow font host hold the door shut.
+    if (document.fonts?.ready) {
+      Promise.all([
+        document.fonts.load('900 100px "Unbounded"'),
+        document.fonts.load('700 100px "Unbounded"'),
+        document.fonts.load('300 40px "Space Grotesk"'),
+        document.fonts.load('400 40px "Space Grotesk"'),
+        document.fonts.load('500 40px "Space Grotesk"'),
+      ]).then(done, done);
+    } else done();
     const t = setTimeout(done, 4000);
     return () => {
       cancelled = true;
@@ -32,12 +43,21 @@ const App: React.FC = () => {
 
   const openTerminal = useCallback(() => setTerminalOpen(true), []);
   const onReady = useCallback(() => setPainted(true), []);
+  const onCaseClick = useCallback((i: number) => setCaseIndex(i), []);
+  const onEmailClick = useCallback(() => {
+    window.location.href = `mailto:${TALK.email}`;
+  }, []);
 
   return (
     <div className="stage">
-      <Canvas sectionCount={SECTIONS.length} subscribe={subscribe} onReady={onReady} />
-
-      <Panels subscribe={subscribe} onOpenTerminal={openTerminal} />
+      {fontsIn && (
+        <Canvas
+          subscribe={subscribe}
+          onReady={onReady}
+          onCaseClick={onCaseClick}
+          onEmailClick={onEmailClick}
+        />
+      )}
 
       {/* Owns the scrollbar; its height is the length of the flight. */}
       <div className="scroller" ref={scrollerRef} tabIndex={-1}>
@@ -53,6 +73,10 @@ const App: React.FC = () => {
         onJump={scrollToSection}
         onOpenTerminal={openTerminal}
       />
+
+      {caseIndex !== null && (
+        <CaseOverlay index={caseIndex} onClose={() => setCaseIndex(null)} onNext={setCaseIndex} />
+      )}
 
       <TerminalChat isOpen={terminalOpen} onClose={() => setTerminalOpen(false)} />
 

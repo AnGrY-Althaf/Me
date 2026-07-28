@@ -1,41 +1,35 @@
 import * as THREE from 'three';
+import { SECTIONS } from '../content';
 
-/** World length of the whole flight, in scene units. */
-export const PATH_LEN = 880;
-export const START_Z = 40;
+/** Distance between neighbouring stations, world units. */
+export const STATION_GAP = 90;
+
+/** How far ahead of the camera a station's content rests when arrived. */
+export const READ_DIST = 26;
+
+export const SECTION_COUNT = SECTIONS.length;
+
+/** Total camera travel: first station at t=0, last at t=1. */
+export const PATH_LEN = STATION_GAP * (SECTION_COUNT - 1);
 
 /**
- * The camera track. `t` runs 0..1 across the whole scroll.
- * Two out-of-phase sine pairs keep the flight from ever feeling like a
- * straight tube without needing a hand-authored spline.
+ * The flight is a near-straight dive down -Z with a gentle lateral sway, so
+ * content approached off-centre drifts into place as you arrive.
  */
 export function pathAt(t: number, out: THREE.Vector3): THREE.Vector3 {
-  const x = Math.sin(t * Math.PI * 2.4) * 7.5 + Math.sin(t * Math.PI * 5.7 + 1.2) * 1.9;
-  const y = Math.sin(t * Math.PI * 1.9 + 0.5) * 3.6 + Math.cos(t * Math.PI * 4.3) * 1.2;
-  const z = START_Z - t * PATH_LEN;
+  const z = -t * PATH_LEN;
+  const x = Math.sin(t * Math.PI * 1.7) * 2.2;
+  const y = Math.cos(t * Math.PI * 1.3 + 0.6) * 1.4;
   return out.set(x, y, z);
 }
 
-/**
- * Normalised station for section `i` of `n` — where its content lives on the
- * track. The first sits at 0 and the last at 1, so the hero is already on
- * screen when the loader lifts and the closing panel lands on the last pixel
- * of scroll.
- */
-export function stationT(i: number, n: number): number {
-  return n <= 1 ? 0 : i / (n - 1);
+export function stationT(i: number): number {
+  return SECTION_COUNT <= 1 ? 0 : i / (SECTION_COUNT - 1);
 }
 
-/** Half the gap between two stations — the reach of one panel's fade. */
-export function stationHalfWindow(n: number): number {
-  return n <= 1 ? 1 : 0.5 / (n - 1);
-}
-
-/**
- * Where the wireframe structures sit: halfway between two stations, so the
- * camera punches through one on every transition and the text always reads
- * against open space.
- */
-export function structureT(i: number, n: number): number {
-  return stationT(i, n) + stationHalfWindow(n);
+/** World anchor where section `i`'s content sits (READ_DIST past the camera's rest). */
+export function stationAnchor(i: number, out: THREE.Vector3): THREE.Vector3 {
+  pathAt(stationT(i), out);
+  out.z -= READ_DIST;
+  return out;
 }

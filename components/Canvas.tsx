@@ -3,15 +3,16 @@ import { Flight } from '../flight/Flight';
 import type { Frame } from '../hooks/useFlightScroll';
 
 interface Props {
-  sectionCount: number;
   subscribe: (fn: (f: Frame) => void) => () => void;
   onReady: () => void;
+  onCaseClick: (index: number) => void;
+  onEmailClick: () => void;
 }
 
-const Canvas: React.FC<Props> = ({ sectionCount, subscribe, onReady }) => {
+const Canvas: React.FC<Props> = ({ subscribe, onReady, onCaseClick, onEmailClick }) => {
   const holder = useRef<HTMLDivElement>(null);
-  const ready = useRef(onReady);
-  ready.current = onReady;
+  const cbs = useRef({ onReady, onCaseClick, onEmailClick });
+  cbs.current = { onReady, onCaseClick, onEmailClick };
 
   useEffect(() => {
     const el = holder.current;
@@ -19,20 +20,21 @@ const Canvas: React.FC<Props> = ({ sectionCount, subscribe, onReady }) => {
 
     let flight: Flight | null = null;
     try {
-      flight = new Flight(el, sectionCount);
+      flight = new Flight(el);
     } catch (err) {
-      // No WebGL: the HTML layer still reads fine on its own.
-      console.warn('WebGL unavailable, running without the flight layer.', err);
-      ready.current();
+      console.warn('WebGL unavailable.', err);
+      cbs.current.onReady();
       return;
     }
+    flight.onCaseClick = (i) => cbs.current.onCaseClick(i);
+    flight.onEmailClick = () => cbs.current.onEmailClick();
 
     let first = true;
     const off = subscribe((f) => {
       flight!.update(f);
       if (first) {
         first = false;
-        ready.current();
+        cbs.current.onReady();
       }
     });
 
@@ -40,9 +42,9 @@ const Canvas: React.FC<Props> = ({ sectionCount, subscribe, onReady }) => {
       off();
       flight?.dispose();
     };
-  }, [sectionCount, subscribe]);
+  }, [subscribe]);
 
-  return <div className="canvas-holder" ref={holder} aria-hidden="true" />;
+  return <div className="canvas-holder" ref={holder} />;
 };
 
 export default Canvas;
