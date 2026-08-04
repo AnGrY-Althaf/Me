@@ -103,20 +103,12 @@ export const CREDENTIALS = [
   { code: 'HTB Pro Labs', name: 'Dante · RastaLabs · POO' },
 ];
 
-/**
- * Assigned CVEs.
- *
- * The four entries below are real in count only — the IDs, products and
- * summaries still need filling in. CVE identifiers are deliberately left
- * blank rather than invented: a made-up ID points at a real advisory that
- * isn't yours, so a blank renders as "id pending" instead. Set `href` to
- * the NVD or MITRE page and the id becomes a link.
- */
+/** Assigned CVE identifiers. */
 export const CVES = [
-  { id: '', product: '', summary: '', href: '' },
-  { id: '', product: '', summary: '', href: '' },
-  { id: '', product: '', summary: '', href: '' },
-  { id: '', product: '', summary: '', href: '' },
+  'CVE-2026-37724',
+  'CVE-2026-54074',
+  'CVE-2026-50742',
+  'CVE-2026-50743',
 ];
 
 export const HALL_OF_FAME = [

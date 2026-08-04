@@ -377,11 +377,11 @@ blockquote {
   color: var(--text);
 }
 
-/* An unfilled slot reads as clearly waiting on data, not as a real value. */
-h3.pending {
-  font-weight: 400;
-  color: var(--faint);
-  font-style: italic;
+/* Identifiers read better in the mono face than the body sans. */
+.chips.mono li {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: -0.01em;
 }
 
 .group-label {

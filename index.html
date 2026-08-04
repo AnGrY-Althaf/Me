@@ -17,16 +17,14 @@
     />
 
     <script>
-      // Set the theme before first paint so a dark-mode visitor never gets a
-      // white flash while React boots.
+      // Set the theme before first paint so the page never flashes white
+      // while React boots. Dark unless the visitor chose light previously.
       (function () {
+        var theme = 'dark';
         try {
-          var saved = localStorage.getItem('theme');
-          var dark = saved
-            ? saved === 'dark'
-            : window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          if (localStorage.getItem('theme') === 'light') theme = 'light';
         } catch (e) {}
+        document.documentElement.dataset.theme = theme;
       })();
     </script>
   </head>

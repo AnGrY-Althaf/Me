@@ -23,28 +23,9 @@ const Experience: React.FC = () => (
     </ul>
 
     <h2>cves</h2>
-    <p>{CVES.length} assigned CVEs from coordinated disclosure.</p>
-    <ul className="entries">
-      {CVES.map((cve, i) => (
-        <li className="entry" key={cve.id || `cve-${i}`}>
-          <div className="entry-head">
-            <h3 className={cve.id ? undefined : 'pending'}>
-              {cve.id ? (
-                cve.href ? (
-                  <a href={cve.href} target="_blank" rel="noopener noreferrer">
-                    {cve.id}
-                  </a>
-                ) : (
-                  cve.id
-                )
-              ) : (
-                `CVE ${String(i + 1).padStart(2, '0')} — id pending`
-              )}
-            </h3>
-            {cve.product && <span className="entry-meta">{cve.product}</span>}
-          </div>
-          {cve.summary && <p className="entry-note">{cve.summary}</p>}
-        </li>
+    <ul className="chips mono">
+      {CVES.map((id) => (
+        <li key={id}>{id}</li>
       ))}
     </ul>
 
