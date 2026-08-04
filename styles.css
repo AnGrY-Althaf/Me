@@ -377,6 +377,13 @@ blockquote {
   color: var(--text);
 }
 
+/* An unfilled slot reads as clearly waiting on data, not as a real value. */
+h3.pending {
+  font-weight: 400;
+  color: var(--faint);
+  font-style: italic;
+}
+
 .group-label {
   margin: 22px 0 10px;
   font-size: 17px;

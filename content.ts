@@ -26,7 +26,7 @@ export const NAV: NavItem[] = [
 
 export const INTRO = [
   'I break things to make them stronger. I am a Security Engineer at Veuz Concepts, working on product security, VAPT, and security architecture design.',
-  'Alongside that I hunt bug bounties on HackerOne, YesWeHack and Bugcrowd, with Hall of Fame entries at NASA, Mastercard, Sony and Dela. Before Veuz I led offensive research at Offenso Hacker Academy and ran red team operations at RedTeam Hacker Academy, where I built custom exploit frameworks and trained the next generation of security professionals.',
+  'Alongside that I hunt bug bounties on HackerOne, YesWeHack and Bugcrowd, with four assigned CVEs and Hall of Fame entries at NASA, Mastercard, Sony and Dela. Before Veuz I led offensive research at Offenso Hacker Academy and ran red team operations at RedTeam Hacker Academy, where I built custom exploit frameworks and trained the next generation of security professionals.',
   'Available for bug bounty collaboration, red team engagements, consulting and training.',
 ];
 
@@ -50,6 +50,7 @@ export const QUICK_FACTS = [
   { label: 'currently', value: 'Security Engineer at Veuz Concepts' },
   { label: 'focus', value: 'product security, VAPT, security architecture' },
   { label: 'hunting', value: 'HackerOne · YesWeHack · Bugcrowd' },
+  { label: 'cves', value: '4 assigned' },
   { label: 'hall of fame', value: 'NASA · Mastercard · Sony · Dela' },
 ];
 
@@ -100,6 +101,22 @@ export const CREDENTIALS = [
   { code: 'CAP', name: 'Certified AppSec Practitioner' },
   { code: 'CNSP', name: 'Certified Network Security Practitioner' },
   { code: 'HTB Pro Labs', name: 'Dante · RastaLabs · POO' },
+];
+
+/**
+ * Assigned CVEs.
+ *
+ * The four entries below are real in count only — the IDs, products and
+ * summaries still need filling in. CVE identifiers are deliberately left
+ * blank rather than invented: a made-up ID points at a real advisory that
+ * isn't yours, so a blank renders as "id pending" instead. Set `href` to
+ * the NVD or MITRE page and the id becomes a link.
+ */
+export const CVES = [
+  { id: '', product: '', summary: '', href: '' },
+  { id: '', product: '', summary: '', href: '' },
+  { id: '', product: '', summary: '', href: '' },
+  { id: '', product: '', summary: '', href: '' },
 ];
 
 export const HALL_OF_FAME = [
