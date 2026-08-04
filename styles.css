@@ -19,7 +19,7 @@
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --sidebar: 340px;
-  --pad: 46px;
+  --pad: 40px;
 }
 
 :root[data-theme='dark'] {
@@ -71,6 +71,10 @@ a:hover {
    Sidebar
    ============================================================ */
 
+/* Scrolls independently so the nav stays reachable on a short viewport,
+   but the bar itself is hidden: the stack only ever overflows by a few
+   pixels, and a full-height scrollbar for that is pure noise. Wheel and
+   touch still work when it genuinely doesn't fit. */
 .sidebar {
   position: fixed;
   top: 0;
@@ -82,12 +86,17 @@ a:hover {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  scrollbar-width: none;
   background: var(--bg);
 }
 
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
 .avatar {
-  width: 168px;
-  height: 168px;
+  width: 146px;
+  height: 146px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--rule);
@@ -96,7 +105,7 @@ a:hover {
 }
 
 .site-title {
-  margin-top: 26px;
+  margin-top: 22px;
   font-family: var(--mono);
   font-size: 34px;
   font-weight: 500;
@@ -119,7 +128,7 @@ a:hover {
 }
 
 .lead {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   font-size: 19px;
   line-height: 1.45;
   color: var(--text);
@@ -128,7 +137,7 @@ a:hover {
 .sidebar hr {
   width: 100%;
   height: 0;
-  margin: 26px 0;
+  margin: 20px 0;
   border: none;
   border-top: 1px solid var(--rule);
 }
@@ -136,7 +145,7 @@ a:hover {
 .side-nav {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .side-nav a {
@@ -185,7 +194,7 @@ a:hover {
 
 .copyright {
   margin-top: auto;
-  padding-top: 26px;
+  padding-top: 20px;
   font-size: 16px;
   color: var(--muted);
 }
