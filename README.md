@@ -1,20 +1,51 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# blog.althafthehacker.com
 
-# Run and deploy your AI Studio app
+The blog, as a standalone site. Lives on the `blog` branch; the portfolio
+itself is on `simple`.
 
-This contains everything you need to run your app locally.
+Both share one palette, type scale and theme toggle, so the apex domain and
+this subdomain read as the same site. The layout is a 24-column technical
+index — a topic filter rail on the left five columns, a dated table of posts
+across the remaining nineteen.
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+## Run locally
 
-## Run Locally
+```
+npm install
+npm run dev
+```
 
-**Prerequisites:**  Node.js
+## Build
 
+```
+npm run build
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Outputs a static site to `dist/`. No server, no environment variables — point
+`blog.althafthehacker.com` at that directory on any static host.
+
+Deep links are not used, so no SPA rewrite rules are needed.
+
+## Adding a post
+
+Add an entry to the top of `BLOG` in [content.ts](content.ts):
+
+```ts
+{
+  date: '2026-06-01',          // ISO; rendered as 2026.6.1, sorted newest first
+  title: '...',
+  summary: '...',              // shown when the row is expanded
+  author: PROFILE.name,
+  topics: ['Bug Bounty', 'XSS'],
+  href: 'https://...',
+}
+```
+
+Topics build the filter rail automatically, with counts. Reuse existing topic
+strings rather than near-duplicates — `XSS`, not `Cross-Site Scripting` — or
+they will list as separate filters.
+
+## Cross-links
+
+Nav targets live in `SITE` and `NAV` in [content.ts](content.ts). The bracketed
+letters in the top rail are real keyboard shortcuts.
