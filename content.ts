@@ -10,16 +10,26 @@ export const PROFILE = {
   medium: 'https://medium.com/@angry.althaf',
 };
 
+/** The writing lives on its own deployment. */
+export const SITE = {
+  blog: 'https://blog.althafthehacker.com',
+};
+
 export interface NavItem {
   id: string;
   label: string;
+  /**
+   * Set only for entries that leave this site. These are not routes, so
+   * they stay out of the hash router entirely.
+   */
+  href?: string;
 }
 
 export const NAV: NavItem[] = [
   { id: 'whoami', label: 'whoami' },
   { id: 'experience', label: 'experience' },
   { id: 'arsenal', label: 'arsenal' },
-  { id: 'writing', label: 'writing' },
+  { id: 'writing', label: 'writing', href: SITE.blog },
 ];
 
 /* ------------------------------------------------------------ whoami */
@@ -169,29 +179,5 @@ export const SERVICES = [
     title: 'Training & Education',
     scope: 'CTF workshops · Bootcamps',
     note: 'Corporate security awareness.',
-  },
-];
-
-/* ----------------------------------------------------------- writing */
-
-/**
- * Add new posts to the top. An entry with an empty `href` renders as plain
- * text rather than a dead link, so a draft can sit here safely.
- */
-export const POSTS = [
-  {
-    date: '22 May 2026',
-    title:
-      'How I Chained Mass Assignment + PHP Type Juggling to Take Over Any Account on a Live Platform',
-    tag: 'bug bounty · appsec · yeswehack',
-    blurb: '',
-    href: 'https://medium.com/@angry.althaf/how-i-chained-mass-assignment-php-type-juggling-to-take-over-any-account-on-a-live-platform-8ad4b193e171',
-  },
-  {
-    date: '20 May 2026',
-    title: 'Stored XSS via Markdown URL Attribute Injection — How I Earned a €450 Bug Bounty',
-    tag: 'xss · appsec · bug bounty',
-    blurb: '',
-    href: 'https://medium.com/@angry.althaf/stored-xss-via-markdown-url-attribute-injection-how-i-earned-a-450-bug-bounty-48c40ae644ef',
   },
 ];

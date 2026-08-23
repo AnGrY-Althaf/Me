@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NAV } from '../content';
 
-const IDS = NAV.map((n) => n.id);
+/* Off-site entries are not routes, so a stale `#/writing` link falls back
+   to the default page rather than rendering an empty one. */
+const IDS = NAV.filter((n) => !n.href).map((n) => n.id);
 const DEFAULT = IDS[0];
 
 function read(): string {

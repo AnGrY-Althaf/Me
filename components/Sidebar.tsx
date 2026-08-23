@@ -25,17 +25,26 @@ const Sidebar: React.FC<Props> = ({ route, theme, onToggleTheme }) => (
 
     <hr />
 
+    {/* An entry with an `href` leaves the site — writing lives on the blog
+        subdomain. It is styled like the rest so the rail reads as one nav,
+        and never renders as the active route, because it is not one. */}
     <nav className="side-nav">
-      {NAV.map((item) => (
-        <a
-          key={item.id}
-          href={`#/${item.id}`}
-          className={item.id === route ? 'active' : undefined}
-          aria-current={item.id === route ? 'page' : undefined}
-        >
-          {item.label}
-        </a>
-      ))}
+      {NAV.map((item) =>
+        item.href ? (
+          <a key={item.id} href={item.href}>
+            {item.label}
+          </a>
+        ) : (
+          <a
+            key={item.id}
+            href={`#/${item.id}`}
+            className={item.id === route ? 'active' : undefined}
+            aria-current={item.id === route ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        )
+      )}
     </nav>
 
     <hr />
