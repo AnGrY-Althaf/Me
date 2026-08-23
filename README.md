@@ -28,22 +28,37 @@ Deep links are not used, so no SPA rewrite rules are needed.
 
 ## Adding a post
 
-Add an entry to the top of `BLOG` in [content.ts](content.ts):
+Posts are hosted here, not linked out. Each one is a markdown file plus an
+entry describing it.
+
+1. Write `posts/<slug>.md` — the body only, no front matter and no `# Title`
+   (the title comes from the entry below and is rendered as the page heading).
+2. Add an entry to the top of `BLOG` in [content.ts](content.ts):
 
 ```ts
 {
-  date: '2026-06-01',          // ISO; rendered as 2026.6.1, sorted newest first
+  slug: 'my-post',              // must match posts/my-post.md, and is the URL
+  date: '2026-06-01',           // ISO; shown as 2026.6.1, sorted newest first
   title: '...',
-  summary: '...',              // shown when the row is expanded
+  summary: '...',               // shown in the expanded row and under the title
   author: PROFILE.name,
   topics: ['Bug Bounty', 'XSS'],
-  href: 'https://...',
+  hero: '/posts/my-post.webp',  // optional, from public/posts/
+  readingTime: '6 min read',
+  body: body('my-post'),
 }
 ```
+
+The post is then live at `#/my-post`. A missing markdown file fails the build
+with a named error rather than shipping an empty page.
 
 Topics build the filter rail automatically, with counts. Reuse existing topic
 strings rather than near-duplicates — `XSS`, not `Cross-Site Scripting` — or
 they will list as separate filters.
+
+Markdown supports GFM, so tables and fenced code blocks both work. Code and
+tables are allowed to run wider than the text column, which is capped at a
+readable measure.
 
 ## Cross-links
 

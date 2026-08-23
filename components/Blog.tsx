@@ -58,7 +58,7 @@ const CheckboxIcon: React.FC<{ on: boolean }> = ({ on }) => (
   </svg>
 );
 
-/** Stair-stepped diagonal arrow — the pixel "opens elsewhere" mark. */
+/** Stair-stepped diagonal arrow, revealed on hover. */
 const HoverArrow: React.FC = () => (
   <span className="feed-arrow" aria-hidden="true">
     <svg viewBox="0 0 6 6" fill="none">
@@ -160,7 +160,7 @@ interface RowProps {
 const Row: React.FC<RowProps> = ({ post, open, onToggle }) => (
   <li className="feed-item">
     <div className="feed-row">
-      <a className="feed-row-link" href={post.href} target="_blank" rel="noopener noreferrer">
+      <a className="feed-row-link" href={`#/${post.slug}`}>
         <span className="feed-row-date">
           <span className="feed-square" />
           <span className="smallcaps">{formatDate(post.date)}</span>
@@ -305,10 +305,10 @@ const Blog: React.FC = () => {
         <ul className="feed-items">
           {posts.map((post) => (
             <Row
-              key={post.href}
+              key={post.slug}
               post={post}
-              open={expanded === post.href}
-              onToggle={() => setExpanded((cur) => (cur === post.href ? null : post.href))}
+              open={expanded === post.slug}
+              onToggle={() => setExpanded((cur) => (cur === post.slug ? null : post.slug))}
             />
           ))}
         </ul>

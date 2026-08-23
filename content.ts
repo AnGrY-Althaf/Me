@@ -41,38 +41,74 @@ export const NAV: NavItem[] = [
 /* -------------------------------------------------------------- posts */
 
 export interface BlogPost {
+  /** Also the URL (`#/<slug>`) and the markdown filename. */
+  slug: string;
   /** ISO date — sorted on, and formatted for display as YYYY.M.D. */
   date: string;
   title: string;
+  /** One or two lines, shown in the expanded feed row and under the title. */
   summary: string;
   author: string;
   topics: string[];
-  href: string;
+  /** Optional banner, served from `public/posts/`. */
+  hero?: string;
+  /** How long the piece runs, as shown on the post page. */
+  readingTime: string;
+  /** Filled in below from the matching file in `posts/`. */
+  body: string;
 }
 
 /**
- * The feed. Topics drive the sidebar filter, so reuse existing strings
- * rather than inventing near-duplicates ("XSS" not "Cross-Site Scripting").
- * Newest first is enforced at render time, so order here is only a hint.
+ * Post bodies live as plain markdown in `posts/<slug>.md` and are pulled in
+ * at build time, so writing a post means writing a file rather than editing
+ * a TypeScript literal.
+ */
+const BODIES = import.meta.glob('./posts/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+function body(slug: string): string {
+  const md = BODIES[`./posts/${slug}.md`];
+  if (!md) throw new Error(`No markdown found for post "${slug}" (expected posts/${slug}.md)`);
+  return md;
+}
+
+/**
+ * The feed. Topics drive the filter rail, so reuse existing strings rather
+ * than inventing near-duplicates ("XSS" not "Cross-Site Scripting"). Newest
+ * first is enforced at render time, so order here is only a hint.
  */
 export const BLOG: BlogPost[] = [
   {
+    slug: 'mass-assignment-php-type-juggling-account-takeover',
     date: '2026-05-22',
     title:
       'How I Chained Mass Assignment + PHP Type Juggling to Take Over Any Account on a Live Platform',
     summary:
-      'A mass assignment flaw and a loose PHP comparison, chained together into full account takeover on a live YesWeHack target.',
+      'A bug bounty writeup on an unauthenticated account takeover via a password reset endpoint.',
     author: PROFILE.name,
     topics: ['Account Takeover', 'AppSec', 'Bug Bounty', 'PHP', 'YesWeHack'],
-    href: 'https://medium.com/@angry.althaf/how-i-chained-mass-assignment-php-type-juggling-to-take-over-any-account-on-a-live-platform-8ad4b193e171',
+    hero: '/posts/mass-assignment-php-type-juggling-account-takeover.webp',
+    readingTime: '8 min read',
+    body: body('mass-assignment-php-type-juggling-account-takeover'),
   },
   {
+    slug: 'stored-xss-markdown-url-attribute-injection',
     date: '2026-05-20',
     title: 'Stored XSS via Markdown URL Attribute Injection — How I Earned a €450 Bug Bounty',
     summary:
-      'Markdown link rendering let attributes escape the URL slot, turning an ordinary input into stored XSS. Paid out at €450.',
+      'A deep dive into unsafe string interpolation, backwards sanitization order, and why CSP is not a fix.',
     author: PROFILE.name,
     topics: ['AppSec', 'Bug Bounty', 'XSS'],
-    href: 'https://medium.com/@angry.althaf/stored-xss-via-markdown-url-attribute-injection-how-i-earned-a-450-bug-bounty-48c40ae644ef',
+    hero: '/posts/stored-xss-markdown-url-attribute-injection.webp',
+    readingTime: '6 min read',
+    body: body('stored-xss-markdown-url-attribute-injection'),
   },
 ];
+
+/** Looks up a post by its slug, for the `#/<slug>` route. */
+export function findPost(slug: string): BlogPost | undefined {
+  return BLOG.find((p) => p.slug === slug);
+}
