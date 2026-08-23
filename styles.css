@@ -210,8 +210,13 @@ a {
 
 /* ------------------------------------------------------------ title */
 
+/* The title sets at 84% line-height, so its glyphs overflow their own box
+   — the descender on "blog" drops well past the bottom edge. The grid's
+   12px row gap measures from that box, not the ink, so the rail's first
+   label needs real space here or the two collide. Scales with the title. */
 .feed-title-row {
   grid-column: 1 / -1;
+  margin-bottom: clamp(18px, 3.5cqi, 52px);
 }
 
 .feed-title {
